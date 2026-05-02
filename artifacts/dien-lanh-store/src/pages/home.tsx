@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Wrench, Truck, Wind, RefreshCw } from "lucide-react";
+import { ArrowRight, ShieldCheck, Wrench, Truck, Wind, RefreshCw, Clock } from "lucide-react";
 import { useGetFeaturedProducts, useListCategories } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -189,26 +189,26 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
             <div className="flex flex-col items-center text-center p-7 bg-white rounded-xl border">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <h3 className="text-base font-black mb-2 tracking-tight">Hàng Chính Hãng</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">100% sản phẩm mới, nguyên đai nguyên kiện từ các thương hiệu uy tín.</p>
-            </div>
-
-            <div className="flex flex-col items-center text-center p-7 bg-white rounded-xl border">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                <Wrench className="w-7 h-7" />
-              </div>
-              <h3 className="text-base font-black mb-2 tracking-tight">Lắp Đặt Chuyên Nghiệp</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Đội ngũ kỹ thuật viên lành nghề, đảm bảo đúng quy chuẩn kỹ thuật.</p>
-            </div>
-
-            <div className="flex flex-col items-center text-center p-7 bg-white rounded-xl border">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-5">
                 <Truck className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-black mb-2 tracking-tight">Giao Hàng Miễn Phí</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Giao hàng và lắp đặt tận nơi nhanh chóng trong khu vực nội thành.</p>
+              <h3 className="text-base font-black mb-2 tracking-tight">Miễn Phí Giao Hàng</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">Giao hàng tận nơi miễn phí trong bán kính 15km.</p>
+            </div>
+
+            <div className="flex flex-col items-center text-center p-7 bg-white rounded-xl border">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-5">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-black mb-2 tracking-tight">Cam Kết Chất Lượng</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">Cam kết sản phẩm hoạt động tốt, kiểm tra kỹ trước khi giao.</p>
+            </div>
+
+            <div className="flex flex-col items-center text-center p-7 bg-white rounded-xl border">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-5">
+                <Clock className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-black mb-2 tracking-tight">Bảo Hành Cửa Hàng</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">Bảo hành từ 3 đến 6 tháng cho tất cả sản phẩm đã qua sử dụng.</p>
             </div>
           </div>
         </div>
