@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: "/products?categoryId=2", label: "Máy Giặt" },
   { href: "/products?categoryId=3", label: "Tủ Lạnh" },
   { href: "/dich-vu", label: "Dịch Vụ" },
+  { href: "/gioi-thieu", label: "Giới Thiệu" },
   { href: "/warranty", label: "Kiểm Tra Bảo Hành" },
 ];
 

@@ -16,6 +16,7 @@ const Login = lazy(() => import("@/pages/login"));
 const Warranty = lazy(() => import("@/pages/warranty"));
 const Admin = lazy(() => import("@/pages/admin"));
 const DichVu = lazy(() => import("@/pages/dich-vu"));
+const GioiThieu = lazy(() => import("@/pages/gioi-thieu"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -113,6 +114,7 @@ function Router() {
             <Route path="/login" component={Login} />
             <Route path="/warranty" component={Warranty} />
             <Route path="/dich-vu" component={DichVu} />
+            <Route path="/gioi-thieu" component={GioiThieu} />
             <Route path="/admin" component={Admin} />
             <Route component={NotFound} />
           </Switch>
