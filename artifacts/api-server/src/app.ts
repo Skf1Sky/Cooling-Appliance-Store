@@ -3,6 +3,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
+import ConnectPgSimple from "connect-pg-simple";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -12,6 +13,8 @@ declare module "express-session" {
     role: string;
   }
 }
+
+const PgStore = ConnectPgSimple(session);
 
 const app: Express = express();
 
@@ -34,7 +37,14 @@ app.use(
     },
   }),
 );
-app.use(cors({ origin: true, credentials: true }));
+
+const allowedOrigins = process.env["ALLOWED_ORIGINS"]?.split(",") ?? [];
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,8 +53,17 @@ if (!sessionSecret) {
   throw new Error("SESSION_SECRET environment variable is required");
 }
 
+const databaseUrl = process.env["DATABASE_URL"];
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+
 app.use(
   session({
+    store: new PgStore({
+      conString: databaseUrl,
+      tableName: "session",
+    }),
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
@@ -52,7 +71,7 @@ app.use(
       httpOnly: true,
       secure: process.env["NODE_ENV"] === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "lax",
+      sameSite: process.env["NODE_ENV"] === "production" ? "none" : "lax",
     },
   }),
 );

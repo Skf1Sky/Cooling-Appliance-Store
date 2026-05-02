@@ -7,12 +7,14 @@ import ordersRouter from "./orders";
 import authRouter from "./auth";
 import adminRouter from "./admin";
 import warrantyRouter from "./warranty";
+import statsRouter from "./stats";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
 router.use(adminRouter);
+router.use(statsRouter);
 router.use(warrantyRouter);
 router.use(productsRouter);
 router.use(categoriesRouter);

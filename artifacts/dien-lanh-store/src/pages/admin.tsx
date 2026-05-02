@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { 
   useGetMe, 
   useLogout,
@@ -31,13 +31,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Package, ShoppingCart, ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2 } from "lucide-react";
+import { Package, ShoppingCart, ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"orders" | "products" | "warranty">("orders");
+  const [activeTab, setActiveTab] = useState<"stats" | "orders" | "products" | "warranty">("stats");
   
   const { data: user, isLoading: isAuthLoading, isError: isAuthError } = useGetMe({
     query: {
@@ -88,6 +90,13 @@ export default function Admin() {
         </div>
         <nav className="flex-1 px-4 space-y-2">
           <Button 
+            variant={activeTab === "stats" ? "secondary" : "ghost"} 
+            className="w-full justify-start"
+            onClick={() => setActiveTab("stats")}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" /> Thống Kê
+          </Button>
+          <Button 
             variant={activeTab === "orders" ? "secondary" : "ghost"} 
             className="w-full justify-start"
             onClick={() => setActiveTab("orders")}
@@ -119,10 +128,196 @@ export default function Admin() {
       {/* Main Content */}
       <div className="flex-1 overflow-auto bg-background">
         <div className="p-8">
+          {activeTab === "stats" && <StatsTab />}
           {activeTab === "orders" && <OrdersTab />}
           {activeTab === "products" && <ProductsTab />}
           {activeTab === "warranty" && <WarrantyTab />}
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface StatsData {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  ordersByStatus: Array<{ status: string; count: number }>;
+  revenueByDay: Array<{ date: string; revenue: number; count: number }>;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "#eab308", // yellow-500
+  confirmed: "#3b82f6", // blue-500
+  shipping: "#f97316", // orange-500
+  delivered: "#22c55e", // green-500
+  cancelled: "#ef4444", // red-500
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Chờ xác nhận",
+  confirmed: "Đã xác nhận",
+  shipping: "Đang giao",
+  delivered: "Đã giao",
+  cancelled: "Đã hủy",
+};
+
+function StatsTab() {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/stats", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json() as Promise<StatsData>;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold">Thống Kê</h3>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="h-32 rounded-xl bg-muted animate-pulse" />
+          <div className="h-32 rounded-xl bg-muted animate-pulse" />
+          <div className="h-32 rounded-xl bg-muted animate-pulse" />
+        </div>
+        <div className="h-[400px] rounded-xl bg-muted animate-pulse mt-6" />
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return <div>Không có dữ liệu</div>;
+  }
+
+  const pieData = stats.ordersByStatus.map(item => ({
+    name: STATUS_LABELS[item.status] || item.status,
+    value: Number(item.count),
+    color: STATUS_COLORS[item.status] || "#94a3b8"
+  }));
+
+  const formatMillions = (val: number) => {
+    if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+    return val.toString();
+  };
+
+  const chartData = stats.revenueByDay.map(item => {
+    const d = new Date(item.date);
+    return {
+      ...item,
+      displayDate: `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold">Thống Kê Tổng Quan</h3>
+      
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tổng Doanh Thu</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">Từ các đơn đã giao thành công</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tổng Đơn Hàng</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            <p className="text-xs text-muted-foreground">Tổng số đơn hàng đã đặt</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tổng Sản Phẩm</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalProducts}</div>
+            <p className="text-xs text-muted-foreground">Sản phẩm đang có trong kho</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Doanh Thu 30 Ngày Gần Nhất</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="displayDate" 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => formatMillions(value)}
+                  />
+                  <RechartsTooltip 
+                    formatter={(value: number) => [formatCurrency(value), "Doanh thu"]}
+                    labelFormatter={(label) => `Ngày ${label}`}
+                  />
+                  <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Trạng Thái Đơn Hàng</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {pieData.map((entry, index) => (
+                <div key={index} className="flex items-center text-sm">
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
+                  <span className="truncate">{entry.name} ({entry.value})</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

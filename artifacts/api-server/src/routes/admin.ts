@@ -23,7 +23,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-router.use(requireAdmin);
+router.use("/admin", requireAdmin);
 
 router.get("/admin/orders", async (_req, res) => {
   const orders = await db.select().from(ordersTable).orderBy(ordersTable.createdAt);
