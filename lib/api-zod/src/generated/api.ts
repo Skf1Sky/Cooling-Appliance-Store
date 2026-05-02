@@ -209,6 +209,249 @@ export const RemoveCartItemResponse = zod.object({
 });
 
 /**
+ * @summary Admin login
+ */
+export const LoginBody = zod.object({
+  username: zod.string(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  role: zod.string(),
+});
+
+/**
+ * @summary Logout
+ */
+export const LogoutResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Get current user
+ */
+export const GetMeResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  role: zod.string(),
+});
+
+/**
+ * @summary List all orders (admin)
+ */
+export const AdminListOrdersResponseItem = zod.object({
+  id: zod.number(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  customerEmail: zod.string().optional(),
+  shippingAddress: zod.string(),
+  note: zod.string().optional(),
+  total: zod.number(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+export const AdminListOrdersResponse = zod.array(AdminListOrdersResponseItem);
+
+/**
+ * @summary Update order status
+ */
+export const AdminUpdateOrderStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminUpdateOrderStatusBody = zod.object({
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "shipping",
+    "delivered",
+    "cancelled",
+  ]),
+});
+
+export const AdminUpdateOrderStatusResponse = zod.object({
+  id: zod.number(),
+  customerName: zod.string(),
+  customerPhone: zod.string(),
+  customerEmail: zod.string().optional(),
+  shippingAddress: zod.string(),
+  note: zod.string().optional(),
+  total: zod.number(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Create a product (admin)
+ */
+export const AdminCreateProductBody = zod.object({
+  name: zod.string(),
+  slug: zod.string().optional(),
+  brand: zod.string(),
+  categoryId: zod.number(),
+  price: zod.number(),
+  originalPrice: zod.number().optional(),
+  discountPercent: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  description: zod.string().optional(),
+  specs: zod.record(zod.string(), zod.string()).optional(),
+  isFeatured: zod.boolean().optional(),
+  inStock: zod.boolean().optional(),
+});
+
+/**
+ * @summary Update a product (admin)
+ */
+export const AdminUpdateProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminUpdateProductBody = zod.object({
+  name: zod.string(),
+  slug: zod.string().optional(),
+  brand: zod.string(),
+  categoryId: zod.number(),
+  price: zod.number(),
+  originalPrice: zod.number().optional(),
+  discountPercent: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  description: zod.string().optional(),
+  specs: zod.record(zod.string(), zod.string()).optional(),
+  isFeatured: zod.boolean().optional(),
+  inStock: zod.boolean().optional(),
+});
+
+export const AdminUpdateProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  slug: zod.string(),
+  brand: zod.string(),
+  categoryId: zod.number(),
+  categoryName: zod.string(),
+  price: zod.number(),
+  originalPrice: zod.number().optional(),
+  discountPercent: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  images: zod.array(zod.string()).optional(),
+  description: zod.string().optional(),
+  specs: zod.record(zod.string(), zod.string()).optional(),
+  isFeatured: zod.boolean().optional(),
+  inStock: zod.boolean(),
+  rating: zod.number().optional(),
+  reviewCount: zod.number().optional(),
+});
+
+/**
+ * @summary Delete a product (admin)
+ */
+export const AdminDeleteProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminDeleteProductResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary List all warranty records (admin)
+ */
+export const AdminListWarrantiesResponseItem = zod.object({
+  id: zod.number(),
+  customerName: zod.string(),
+  phone: zod.string(),
+  productName: zod.string(),
+  serialNumber: zod.string().optional(),
+  purchaseDate: zod.string(),
+  warrantyEndDate: zod.string(),
+  status: zod.string(),
+  note: zod.string().optional(),
+  createdAt: zod.string(),
+});
+export const AdminListWarrantiesResponse = zod.array(
+  AdminListWarrantiesResponseItem,
+);
+
+/**
+ * @summary Create warranty record (admin)
+ */
+export const AdminCreateWarrantyBody = zod.object({
+  customerName: zod.string(),
+  phone: zod.string(),
+  productName: zod.string(),
+  serialNumber: zod.string().optional(),
+  purchaseDate: zod.string(),
+  warrantyEndDate: zod.string(),
+  note: zod.string().optional(),
+});
+
+/**
+ * @summary Update warranty record (admin)
+ */
+export const AdminUpdateWarrantyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminUpdateWarrantyBody = zod.object({
+  customerName: zod.string(),
+  phone: zod.string(),
+  productName: zod.string(),
+  serialNumber: zod.string().optional(),
+  purchaseDate: zod.string(),
+  warrantyEndDate: zod.string(),
+  note: zod.string().optional(),
+});
+
+export const AdminUpdateWarrantyResponse = zod.object({
+  id: zod.number(),
+  customerName: zod.string(),
+  phone: zod.string(),
+  productName: zod.string(),
+  serialNumber: zod.string().optional(),
+  purchaseDate: zod.string(),
+  warrantyEndDate: zod.string(),
+  status: zod.string(),
+  note: zod.string().optional(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Delete warranty record (admin)
+ */
+export const AdminDeleteWarrantyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminDeleteWarrantyResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Check warranty by phone number
+ */
+export const CheckWarrantyQueryParams = zod.object({
+  phone: zod.coerce.string(),
+});
+
+export const CheckWarrantyResponseItem = zod.object({
+  id: zod.number(),
+  customerName: zod.string(),
+  phone: zod.string(),
+  productName: zod.string(),
+  serialNumber: zod.string().optional(),
+  purchaseDate: zod.string(),
+  warrantyEndDate: zod.string(),
+  status: zod.string(),
+  note: zod.string().optional(),
+  createdAt: zod.string(),
+});
+export const CheckWarrantyResponse = zod.array(CheckWarrantyResponseItem);
+
+/**
  * @summary Place an order
  */
 export const CreateOrderBody = zod.object({

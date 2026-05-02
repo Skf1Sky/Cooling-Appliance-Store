@@ -18,6 +18,12 @@ tags:
     description: Shopping cart operations
   - name: orders
     description: Order operations
+  - name: auth
+    description: Authentication operations
+  - name: admin
+    description: Admin operations (protected)
+  - name: warranty
+    description: Warranty operations
 paths:
   /healthz:
     get:
@@ -205,6 +211,259 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cart"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginPayload"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/orders:
+    get:
+      operationId: adminListOrders
+      tags: [admin]
+      summary: List all orders (admin)
+      responses:
+        "200":
+          description: All orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminOrder"
+
+  /admin/orders/{id}/status:
+    put:
+      operationId: adminUpdateOrderStatus
+      tags: [admin]
+      summary: Update order status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderStatusPayload"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOrder"
+
+  /admin/products:
+    post:
+      operationId: adminCreateProduct
+      tags: [admin]
+      summary: Create a product (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminProductPayload"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /admin/products/{id}:
+    put:
+      operationId: adminUpdateProduct
+      tags: [admin]
+      summary: Update a product (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminProductPayload"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: adminDeleteProduct
+      tags: [admin]
+      summary: Delete a product (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/warranties:
+    get:
+      operationId: adminListWarranties
+      tags: [admin]
+      summary: List all warranty records (admin)
+      responses:
+        "200":
+          description: All warranties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Warranty"
+    post:
+      operationId: adminCreateWarranty
+      tags: [admin]
+      summary: Create warranty record (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWarrantyPayload"
+      responses:
+        "201":
+          description: Created warranty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Warranty"
+
+  /admin/warranties/{id}:
+    put:
+      operationId: adminUpdateWarranty
+      tags: [admin]
+      summary: Update warranty record (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWarrantyPayload"
+      responses:
+        "200":
+          description: Updated warranty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Warranty"
+    delete:
+      operationId: adminDeleteWarranty
+      tags: [admin]
+      summary: Delete warranty record (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /warranty/check:
+    get:
+      operationId: checkWarranty
+      tags: [warranty]
+      summary: Check warranty by phone number
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Warranty results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Warranty"
 
   /orders:
     post:
@@ -415,3 +674,169 @@ components:
         - total
         - status
         - createdAt
+
+    AdminOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        customerEmail:
+          type: string
+        shippingAddress:
+          type: string
+        note:
+          type: string
+        total:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - customerName
+        - customerPhone
+        - shippingAddress
+        - total
+        - status
+        - createdAt
+
+    UpdateOrderStatusPayload:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, shipping, delivered, cancelled]
+      required:
+        - status
+
+    AdminProductPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        brand:
+          type: string
+        categoryId:
+          type: integer
+        price:
+          type: number
+        originalPrice:
+          type: number
+        discountPercent:
+          type: integer
+        imageUrl:
+          type: string
+        description:
+          type: string
+        specs:
+          type: object
+          additionalProperties:
+            type: string
+        isFeatured:
+          type: boolean
+        inStock:
+          type: boolean
+      required:
+        - name
+        - brand
+        - categoryId
+        - price
+
+    LoginPayload:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+      required:
+        - id
+        - username
+        - role
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    Warranty:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerName:
+          type: string
+        phone:
+          type: string
+        productName:
+          type: string
+        serialNumber:
+          type: string
+        purchaseDate:
+          type: string
+        warrantyEndDate:
+          type: string
+        status:
+          type: string
+        note:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - customerName
+        - phone
+        - productName
+        - purchaseDate
+        - warrantyEndDate
+        - status
+        - createdAt
+
+    CreateWarrantyPayload:
+      type: object
+      properties:
+        customerName:
+          type: string
+        phone:
+          type: string
+        productName:
+          type: string
+        serialNumber:
+          type: string
+        purchaseDate:
+          type: string
+        warrantyEndDate:
+          type: string
+        note:
+          type: string
+      required:
+        - customerName
+        - phone
+        - productName
+        - purchaseDate
+        - warrantyEndDate

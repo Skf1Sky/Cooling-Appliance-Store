@@ -37,6 +37,9 @@ export function Header() {
                 <Link href="/products?categoryId=2" className="text-lg font-medium text-muted-foreground">
                   Máy Giặt
                 </Link>
+                <Link href="/warranty" className="text-lg font-medium text-muted-foreground">
+                  Kiểm Tra Bảo Hành
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
@@ -57,6 +60,9 @@ export function Header() {
             </Link>
             <Link href="/products?categoryId=2" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               Máy Giặt
+            </Link>
+            <Link href="/warranty" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              Kiểm Tra Bảo Hành
             </Link>
           </nav>
         </div>

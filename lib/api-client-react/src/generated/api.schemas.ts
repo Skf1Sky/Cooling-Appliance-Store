@@ -86,10 +86,97 @@ export interface Order {
   createdAt: string;
 }
 
+export interface AdminOrder {
+  id: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  shippingAddress: string;
+  note?: string;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
+export type UpdateOrderStatusPayloadStatus =
+  (typeof UpdateOrderStatusPayloadStatus)[keyof typeof UpdateOrderStatusPayloadStatus];
+
+export const UpdateOrderStatusPayloadStatus = {
+  pending: "pending",
+  confirmed: "confirmed",
+  shipping: "shipping",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export interface UpdateOrderStatusPayload {
+  status: UpdateOrderStatusPayloadStatus;
+}
+
+export type AdminProductPayloadSpecs = { [key: string]: string };
+
+export interface AdminProductPayload {
+  name: string;
+  slug?: string;
+  brand: string;
+  categoryId: number;
+  price: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  imageUrl?: string;
+  description?: string;
+  specs?: AdminProductPayloadSpecs;
+  isFeatured?: boolean;
+  inStock?: boolean;
+}
+
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: string;
+}
+
+export interface SuccessResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface Warranty {
+  id: number;
+  customerName: string;
+  phone: string;
+  productName: string;
+  serialNumber?: string;
+  purchaseDate: string;
+  warrantyEndDate: string;
+  status: string;
+  note?: string;
+  createdAt: string;
+}
+
+export interface CreateWarrantyPayload {
+  customerName: string;
+  phone: string;
+  productName: string;
+  serialNumber?: string;
+  purchaseDate: string;
+  warrantyEndDate: string;
+  note?: string;
+}
+
 export type ListProductsParams = {
   categoryId?: number;
   search?: string;
   minPrice?: number;
   maxPrice?: number;
   brand?: string;
+};
+
+export type CheckWarrantyParams = {
+  phone: string;
 };

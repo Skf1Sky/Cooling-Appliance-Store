@@ -8,6 +8,9 @@ import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
+import Login from "@/pages/login";
+import Warranty from "@/pages/warranty";
+import Admin from "@/pages/admin";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
@@ -24,6 +27,9 @@ function Router() {
           <Route path="/products/:id" component={ProductDetail} />
           <Route path="/cart" component={Cart} />
           <Route path="/checkout" component={Checkout} />
+          <Route path="/login" component={Login} />
+          <Route path="/warranty" component={Warranty} />
+          <Route path="/admin" component={Admin} />
           <Route component={NotFound} />
         </Switch>
       </main>
