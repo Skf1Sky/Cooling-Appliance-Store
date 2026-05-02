@@ -5,6 +5,7 @@
  * API specification for Điện Lạnh Store
  * OpenAPI spec version: 0.1.0
  */
+import type { ProductCondition } from "./productCondition";
 import type { ProductSpecs } from "./productSpecs";
 
 export interface Product {
@@ -21,6 +22,7 @@ export interface Product {
   images?: string[];
   description?: string;
   specs?: ProductSpecs;
+  condition?: ProductCondition;
   isFeatured?: boolean;
   inStock: boolean;
   rating?: number;

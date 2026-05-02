@@ -23,6 +23,7 @@ export * from "./listProductsParams";
 export * from "./loginPayload";
 export * from "./order";
 export * from "./product";
+export * from "./productCondition";
 export * from "./productSpecs";
 export * from "./successResponse";
 export * from "./updateCartQuantityPayload";

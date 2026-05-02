@@ -553,6 +553,9 @@ components:
           type: object
           additionalProperties:
             type: string
+        condition:
+          type: string
+          enum: [new, used]
         isFeatured:
           type: boolean
         inStock:

@@ -15,6 +15,7 @@ export const productsTable = pgTable("products", {
   images: jsonb("images").$type<string[]>().default([]),
   description: text("description"),
   specs: jsonb("specs").$type<Record<string, string>>().default({}),
+  condition: text("condition").default("new"),
   isFeatured: boolean("is_featured").default(false),
   inStock: boolean("in_stock").default(true),
   rating: numeric("rating", { precision: 2, scale: 1 }),

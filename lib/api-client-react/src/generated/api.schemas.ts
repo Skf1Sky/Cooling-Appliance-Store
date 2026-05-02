@@ -23,6 +23,14 @@ export interface Category {
 
 export type ProductSpecs = { [key: string]: string };
 
+export type ProductCondition =
+  (typeof ProductCondition)[keyof typeof ProductCondition];
+
+export const ProductCondition = {
+  new: "new",
+  used: "used",
+} as const;
+
 export interface Product {
   id: number;
   name: string;
@@ -37,6 +45,7 @@ export interface Product {
   images?: string[];
   description?: string;
   specs?: ProductSpecs;
+  condition?: ProductCondition;
   isFeatured?: boolean;
   inStock: boolean;
   rating?: number;

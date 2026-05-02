@@ -5,17 +5,20 @@ import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
-  SheetClose
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+
+const COMMON_BRANDS = ["Daikin", "LG", "Samsung", "Panasonic", "Toshiba", "Aqua", "Electrolux", "Casper", "Midea", "Sharp", "Bosch", "Mitsubishi"];
 
 export default function Products() {
   const [location] = useLocation();
@@ -24,21 +27,18 @@ export default function Products() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(
     initialCategoryId ? parseInt(initialCategoryId) : undefined
   );
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<{min?: number, max?: number}>({});
+  const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
+  const [condition, setCondition] = useState<"" | "new" | "used">("");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 500);
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // When location changes (e.g. clicking header links), update category
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const catId = params.get("categoryId");
@@ -46,7 +46,7 @@ export default function Products() {
   }, [location]);
 
   const { data: categories } = useListCategories();
-  
+
   const queryParams = {
     search: debouncedSearch || undefined,
     categoryId: selectedCategory,
@@ -55,11 +55,15 @@ export default function Products() {
     maxPrice: priceRange.max,
   };
 
-  const { data: products, isLoading } = useListProducts(queryParams);
+  const { data: allProducts, isLoading } = useListProducts(queryParams);
+
+  const products = condition
+    ? allProducts?.filter((p) => (p as any).condition === condition)
+    : allProducts;
 
   const toggleBrand = (brand: string) => {
-    setSelectedBrands(prev => 
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    setSelectedBrands((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
     );
   };
 
@@ -69,36 +73,69 @@ export default function Products() {
     setPriceRange({});
     setSearch("");
     setDebouncedSearch("");
+    setCondition("");
   };
 
-  // Extract unique brands from products if needed, but typically we'd have a brands endpoint.
-  // For simplicity, hardcoding some common brands
-  const commonBrands = ["Panasonic", "Daikin", "LG", "Samsung", "Toshiba", "Aqua", "Electrolux"];
+  const hasFilters = selectedCategory || selectedBrands.length > 0 || priceRange.min || priceRange.max || search || condition;
 
   const FilterSidebar = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-lg">Bộ Lọc</h3>
-        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground">
-          Xóa lọc
-        </Button>
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground">
+            Xóa lọc
+          </Button>
+        )}
       </div>
 
+      {/* Condition filter */}
+      <div className="space-y-3">
+        <h4 className="font-medium text-sm">Tình trạng</h4>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setCondition("")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              condition === "" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/60"
+            }`}
+          >
+            Tất cả
+          </button>
+          <button
+            onClick={() => setCondition("new")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              condition === "new" ? "bg-green-500 text-white border-green-500" : "border-border hover:border-green-400"
+            }`}
+          >
+            Hàng Mới
+          </button>
+          <button
+            onClick={() => setCondition("used")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              condition === "used" ? "bg-amber-500 text-white border-amber-500" : "border-border hover:border-amber-400"
+            }`}
+          >
+            Hàng Cũ
+          </button>
+        </div>
+      </div>
+
+      {/* Category filter */}
       <div className="space-y-3">
         <h4 className="font-medium text-sm">Danh mục</h4>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="cat-all" 
-              checked={selectedCategory === undefined} 
+            <Checkbox
+              id="cat-all"
+              checked={selectedCategory === undefined}
               onCheckedChange={() => setSelectedCategory(undefined)}
             />
             <Label htmlFor="cat-all" className="cursor-pointer">Tất cả</Label>
           </div>
           {categories?.map((cat) => (
             <div key={cat.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`cat-${cat.id}`} 
+              <Checkbox
+                id={`cat-${cat.id}`}
                 checked={selectedCategory === cat.id}
                 onCheckedChange={() => setSelectedCategory(cat.id)}
               />
@@ -108,13 +145,14 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Brand filter */}
       <div className="space-y-3">
         <h4 className="font-medium text-sm">Thương hiệu</h4>
         <div className="space-y-2">
-          {commonBrands.map((brand) => (
+          {COMMON_BRANDS.map((brand) => (
             <div key={brand} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`brand-${brand}`} 
+              <Checkbox
+                id={`brand-${brand}`}
                 checked={selectedBrands.includes(brand)}
                 onCheckedChange={() => toggleBrand(brand)}
               />
@@ -124,49 +162,30 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Price range */}
       <div className="space-y-3">
         <h4 className="font-medium text-sm">Khoảng giá</h4>
         <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="price-all" 
-              checked={!priceRange.min && !priceRange.max}
-              onCheckedChange={() => setPriceRange({})}
-            />
-            <Label htmlFor="price-all" className="cursor-pointer">Tất cả các mức giá</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="price-1" 
-              checked={priceRange.max === 5000000}
-              onCheckedChange={() => setPriceRange({max: 5000000})}
-            />
-            <Label htmlFor="price-1" className="cursor-pointer">Dưới 5 triệu</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="price-2" 
-              checked={priceRange.min === 5000000 && priceRange.max === 10000000}
-              onCheckedChange={() => setPriceRange({min: 5000000, max: 10000000})}
-            />
-            <Label htmlFor="price-2" className="cursor-pointer">5 - 10 triệu</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="price-3" 
-              checked={priceRange.min === 10000000 && priceRange.max === 20000000}
-              onCheckedChange={() => setPriceRange({min: 10000000, max: 20000000})}
-            />
-            <Label htmlFor="price-3" className="cursor-pointer">10 - 20 triệu</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="price-4" 
-              checked={priceRange.min === 20000000 && !priceRange.max}
-              onCheckedChange={() => setPriceRange({min: 20000000})}
-            />
-            <Label htmlFor="price-4" className="cursor-pointer">Trên 20 triệu</Label>
-          </div>
+          {[
+            { label: "Tất cả các mức giá", id: "price-all", value: {} },
+            { label: "Dưới 3 triệu", id: "price-0", value: { max: 3000000 } },
+            { label: "3 - 8 triệu", id: "price-1", value: { min: 3000000, max: 8000000 } },
+            { label: "8 - 15 triệu", id: "price-2", value: { min: 8000000, max: 15000000 } },
+            { label: "Trên 15 triệu", id: "price-3", value: { min: 15000000 } },
+          ].map(({ label, id, value }) => (
+            <div key={id} className="flex items-center space-x-2">
+              <Checkbox
+                id={id}
+                checked={
+                  priceRange.min === value.min && priceRange.max === value.max &&
+                  ((value.min === undefined) === (priceRange.min === undefined)) &&
+                  ((value.max === undefined) === (priceRange.max === undefined))
+                }
+                onCheckedChange={() => setPriceRange(value)}
+              />
+              <Label htmlFor={id} className="cursor-pointer">{label}</Label>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -179,14 +198,14 @@ export default function Products() {
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Tìm kiếm sản phẩm..." 
+            <Input
+              placeholder="Tìm kiếm sản phẩm..."
               className="pl-10 h-12"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button 
+              <button
                 onClick={() => setSearch("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -194,26 +213,51 @@ export default function Products() {
               </button>
             )}
           </div>
-          
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="lg:hidden w-full sm:w-auto h-12">
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                Lọc Sản Phẩm
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <SheetHeader className="mb-6">
-                <SheetTitle>Lọc Sản Phẩm</SheetTitle>
-              </SheetHeader>
-              <FilterSidebar />
-              <div className="mt-8 flex gap-2">
-                <SheetClose asChild>
-                  <Button className="w-full">Áp dụng</Button>
-                </SheetClose>
-              </div>
-            </SheetContent>
-          </Sheet>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Quick condition toggles on mobile */}
+            <div className="flex gap-2 sm:hidden">
+              <button
+                onClick={() => setCondition(condition === "new" ? "" : "new")}
+                className={`px-3 py-2 rounded-full text-xs font-medium border transition-colors ${
+                  condition === "new" ? "bg-green-500 text-white border-green-500" : "border-border"
+                }`}
+              >
+                Mới
+              </button>
+              <button
+                onClick={() => setCondition(condition === "used" ? "" : "used")}
+                className={`px-3 py-2 rounded-full text-xs font-medium border transition-colors ${
+                  condition === "used" ? "bg-amber-500 text-white border-amber-500" : "border-border"
+                }`}
+              >
+                Cũ
+              </button>
+            </div>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="lg:hidden w-full sm:w-auto h-12">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Lọc Sản Phẩm
+                  {hasFilters && (
+                    <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">!</Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="overflow-y-auto">
+                <SheetHeader className="mb-6">
+                  <SheetTitle>Lọc Sản Phẩm</SheetTitle>
+                </SheetHeader>
+                <FilterSidebar />
+                <div className="mt-8 flex gap-2">
+                  <SheetClose asChild>
+                    <Button className="w-full">Áp dụng</Button>
+                  </SheetClose>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
 
@@ -236,8 +280,16 @@ export default function Products() {
             </div>
           ) : products && products.length > 0 ? (
             <>
-              <div className="mb-4 text-sm text-muted-foreground">
-                Hiển thị {products.length} sản phẩm
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">
+                  Hiển thị {products.length} sản phẩm
+                </span>
+                {condition === "new" && (
+                  <Badge className="bg-green-500 text-white">Hàng Mới</Badge>
+                )}
+                {condition === "used" && (
+                  <Badge className="bg-amber-500 text-white">Hàng Cũ</Badge>
+                )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {products.map((product) => (
@@ -252,7 +304,7 @@ export default function Products() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Không tìm thấy sản phẩm</h3>
               <p className="text-muted-foreground mb-6 max-w-md">
-                Rất tiếc, không có sản phẩm nào phù hợp với bộ lọc hiện tại của bạn. Vui lòng thử lại với các tiêu chí khác.
+                Rất tiếc, không có sản phẩm nào phù hợp với bộ lọc hiện tại. Vui lòng thử lại với các tiêu chí khác.
               </p>
               <Button onClick={clearFilters}>Xóa bộ lọc</Button>
             </div>
