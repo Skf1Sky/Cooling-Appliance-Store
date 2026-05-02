@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "LgF4kLHoub43uAzxCPWjB"
+uri = "file://artifacts/dien-lanh-store/public/images/hero-banner.png"
+type = "image"
+title = "Store hero banner"
+
+[[generated]]
+id = "EMYFDAMaH97-XprI_AODr"
+uri = "file://artifacts/dien-lanh-store/public/images/category-ac.png"
+type = "image"
+title = "Air conditioner category"
+
+[[generated]]
+id = "s6HxgYAP4yDMyuTF1biUW"
+uri = "file://artifacts/dien-lanh-store/public/images/category-wm.png"
+type = "image"
+title = "Washing machine category"
