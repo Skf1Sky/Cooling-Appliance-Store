@@ -22,23 +22,32 @@ export function Header() {
   const itemCount = cart?.itemCount || 0;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
+                <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <div className="text-xl font-bold text-primary tracking-tight mb-6 mt-2">
-                Điện Lạnh<span className="text-foreground"> Minh Hoàng</span>
+            <SheetContent side="left" className="w-[280px]">
+              <div className="mb-8 mt-2">
+                <span className="text-lg font-900 text-primary tracking-tight" style={{ fontWeight: 900, letterSpacing: "-0.03em" }}>
+                  ĐIỆN LẠNH
+                </span>
+                <span className="text-lg tracking-tight" style={{ fontWeight: 900, letterSpacing: "-0.03em" }}>
+                  {" "}MINH HOÀNG
+                </span>
               </div>
-              <nav className="flex flex-col gap-4">
+              <nav className="flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-lg font-medium hover:text-primary transition-colors">
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="nav-label py-3 px-3 rounded-lg hover:bg-muted hover:text-primary transition-colors block"
+                  >
                     {link.label}
                   </Link>
                 ))}
@@ -46,18 +55,21 @@ export function Header() {
             </SheetContent>
           </Sheet>
 
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary tracking-tight">
-              Điện Lạnh<span className="text-foreground"> Minh Hoàng</span>
+          <Link href="/" className="flex items-center">
+            <span className="text-base text-primary" style={{ fontWeight: 900, letterSpacing: "-0.03em" }}>
+              ĐIỆN LẠNH
+            </span>
+            <span className="text-base ml-1.5" style={{ fontWeight: 900, letterSpacing: "-0.03em" }}>
+              MINH HOÀNG
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-5 ml-4">
+          <nav className="hidden md:flex items-center gap-1 ml-3">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                className="nav-label px-3 py-1.5 rounded-md hover:bg-muted hover:text-primary transition-colors whitespace-nowrap"
               >
                 {link.label}
               </Link>
@@ -65,17 +77,21 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-2 text-sm font-medium text-muted-foreground mr-2">
-            <Phone className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <a
+            href="tel:0898234048"
+            className="hidden lg:flex items-center gap-1.5 text-xs font-700 text-muted-foreground hover:text-primary transition-colors"
+            style={{ fontWeight: 700, letterSpacing: "0.02em" }}
+          >
+            <Phone className="h-3.5 w-3.5" />
             <span>0898 234 048</span>
-          </div>
+          </a>
 
           <Link href="/cart">
-            <Button variant="outline" size="icon" className="relative group">
-              <ShoppingCart className="h-5 w-5 group-hover:text-primary transition-colors" />
+            <Button variant="ghost" size="icon" className="relative h-9 w-9">
+              <ShoppingCart className="h-4.5 w-4.5" />
               {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center" style={{ fontWeight: 800 }}>
                   {itemCount}
                 </span>
               )}
