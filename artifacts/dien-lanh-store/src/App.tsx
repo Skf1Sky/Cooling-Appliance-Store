@@ -10,6 +10,8 @@ import { Loader2, Phone, X } from "lucide-react";
 const Home = lazy(() => import("@/pages/home"));
 const Login = lazy(() => import("@/pages/login"));
 const Warranty = lazy(() => import("@/pages/warranty"));
+const Products = lazy(() => import("@/pages/products"));
+const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Admin = lazy(() => import("@/pages/admin"));
 const DichVu = lazy(() => import("@/pages/dich-vu"));
 const GioiThieu = lazy(() => import("@/pages/gioi-thieu"));
@@ -105,6 +107,8 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/login" component={Login} />
             <Route path="/warranty" component={Warranty} />
+            <Route path="/products" component={Products} />
+            <Route path="/products/:id" component={ProductDetail} />
             <Route path="/dich-vu" component={DichVu} />
             <Route path="/gioi-thieu" component={GioiThieu} />
             <Route path="/admin" component={Admin} />

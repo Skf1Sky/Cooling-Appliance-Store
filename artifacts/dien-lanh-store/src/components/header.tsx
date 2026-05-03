@@ -9,6 +9,7 @@ import {
 
 const NAV_LINKS = [
   { href: "/", label: "Trang Chủ" },
+  { href: "/products", label: "Sản Phẩm" },
   { href: "/dich-vu", label: "Dịch Vụ" },
   { href: "/warranty", label: "Kiểm Tra Bảo Hành" },
   { href: "/admin", label: "Quản Trị" },
