@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
-import { useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +9,10 @@ import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const loginMutation = useLogin();
-  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,18 +23,18 @@ export default function Login() {
       return;
     }
 
-    loginMutation.mutate(
-      { data: { username, password } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          setLocation("/admin");
-        },
-        onError: () => {
-          setError("Tài khoản hoặc mật khẩu không chính xác");
-        }
+    setIsPending(true);
+    
+    // Simple hardcoded check for admin
+    setTimeout(() => {
+      if (username === "admin" && password === "admin123") {
+        localStorage.setItem("isAdmin", "true");
+        setLocation("/admin");
+      } else {
+        setError("Tài khoản hoặc mật khẩu không chính xác");
       }
-    );
+      setIsPending(false);
+    }, 500);
   };
 
   return (
@@ -46,11 +42,11 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
-            <span className="text-3xl font-bold text-primary tracking-tight">Điện Lạnh<span className="text-foreground">Store</span></span>
+            <span className="text-3xl font-bold text-primary tracking-tight">ĐIỆN LẠNH<span className="text-foreground"> MINH HOÀNG</span></span>
           </div>
           <CardTitle className="text-2xl font-bold">Đăng nhập quản trị</CardTitle>
           <CardDescription>
-            Nhập thông tin tài khoản để truy cập hệ thống
+            Tài khoản: admin / Mật khẩu: admin123
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -68,7 +64,7 @@ export default function Login() {
                 placeholder="admin"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={loginMutation.isPending}
+                disabled={isPending}
               />
             </div>
             <div className="space-y-2">
@@ -78,13 +74,13 @@ export default function Login() {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loginMutation.isPending}
+                disabled={isPending}
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-              {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Đăng nhập
             </Button>
           </CardFooter>
