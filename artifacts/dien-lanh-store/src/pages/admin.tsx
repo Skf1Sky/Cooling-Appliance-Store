@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Search, Phone, User, Calendar, CreditCard, Filter } from "lucide-react";
+import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Search, Phone, User, Calendar, CreditCard, Filter, ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,7 @@ export default function Admin() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
   const [searchQuery, setSearchQuery] = useState("");
+  const [quickSellData, setQuickSellData] = useState<string | null>(null);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
@@ -35,6 +36,11 @@ export default function Admin() {
     localStorage.removeItem("isAdmin");
     setLocation("/login");
     toast.success("Đã đăng xuất");
+  };
+
+  const handleQuickSell = (productName: string) => {
+    setQuickSellData(productName);
+    setActiveTab("warranty");
   };
 
   if (isAuthLoading) {
@@ -81,17 +87,24 @@ export default function Admin() {
         </div>
 
         <TabsContent value="warranty" className="mt-0">
-          <WarrantyTab searchQuery={searchQuery} />
+          <WarrantyTab 
+            searchQuery={searchQuery} 
+            initialProductName={quickSellData} 
+            onClearQuickSell={() => setQuickSellData(null)} 
+          />
         </TabsContent>
         <TabsContent value="products" className="mt-0">
-          <ProductsTab searchQuery={searchQuery} />
+          <ProductsTab 
+            searchQuery={searchQuery} 
+            onQuickSell={handleQuickSell}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function WarrantyTab({ searchQuery }: { searchQuery: string }) {
+function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { searchQuery: string, initialProductName: string | null, onClearQuickSell: () => void }) {
   const [warranties, setWarranties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,6 +126,24 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
     else setWarranties(data || []);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (initialProductName) {
+      setEditId(null);
+      setFormData({
+        customer_name: "", 
+        phone: "", 
+        product_name: initialProductName, 
+        serial_number: "", 
+        purchase_date: new Date().toISOString().split('T')[0], 
+        warranty_end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+        status: "active", 
+        note: ""
+      });
+      setIsModalOpen(true);
+      onClearQuickSell(); // Clear it so it doesn't reopen on every tab switch
+    }
+  }, [initialProductName, onClearQuickSell]);
 
   useEffect(() => { fetchWarranties(); }, []);
 
@@ -312,7 +343,7 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
   );
 }
 
-function ProductsTab({ searchQuery }: { searchQuery: string }) {
+function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuickSell: (name: string) => void }) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -455,13 +486,21 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
               <h4 className="font-bold text-xs line-clamp-2 mb-2 min-h-[32px] tracking-tight">{p.name}</h4>
               <p className="text-sm font-black text-primary mt-auto">{formatCurrency(p.price)}</p>
             </CardContent>
-            <div className="p-3 pt-0 flex gap-1.5">
-              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold" onClick={() => openEditModal(p)}>
-                <Edit2 className="w-3 h-3 mr-1" /> Sửa
+            <div className="p-3 pt-0 flex flex-col gap-2">
+              <Button 
+                className="w-full h-9 rounded-xl font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 shadow-sm"
+                onClick={() => onQuickSell(`${p.brand} ${p.name}`)}
+              >
+                <ShoppingCart className="w-3.5 h-3.5 mr-2" /> BÁN MÁY
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold text-destructive hover:bg-destructive/5" onClick={() => setDeleteId(p.id)}>
-                <Trash2 className="w-3 h-3 mr-1" /> Xóa
-              </Button>
+              <div className="flex gap-1.5">
+                <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold" onClick={() => openEditModal(p)}>
+                  <Edit2 className="w-3 h-3 mr-1" /> Sửa
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold text-destructive hover:bg-destructive/5" onClick={() => setDeleteId(p.id)}>
+                  <Trash2 className="w-3 h-3 mr-1" /> Xóa
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
