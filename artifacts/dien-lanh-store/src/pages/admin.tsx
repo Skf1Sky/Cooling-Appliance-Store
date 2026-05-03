@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Search, Phone, User, Calendar, CreditCard, Filter, ShoppingCart } from "lucide-react";
+import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Search, Phone, User, Calendar, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +21,6 @@ export default function Admin() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
   const [searchQuery, setSearchQuery] = useState("");
-  const [quickSellData, setQuickSellData] = useState<{ id: number, name: string } | null>(null);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
@@ -38,11 +37,6 @@ export default function Admin() {
     toast.success("Đã đăng xuất");
   };
 
-  const handleQuickSell = (id: number, productName: string) => {
-    setQuickSellData({ id, name: productName });
-    setActiveTab("warranty");
-  };
-
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
@@ -53,11 +47,10 @@ export default function Admin() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-10 max-w-7xl">
-      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1">Bảng Quản Trị</h1>
-          <p className="text-muted-foreground text-sm">Chào mừng quay trở lại, Admin</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1 uppercase text-primary">Quản Trị Hệ Thống</h1>
+          <p className="text-muted-foreground text-sm">Quản lý kho hàng và bảo hành điện lạnh</p>
         </div>
         <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto h-11 border-slate-200">
           <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
@@ -66,11 +59,11 @@ export default function Admin() {
 
       <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-slate-100 rounded-xl">
-          <TabsTrigger value="warranty" className="rounded-lg font-bold data-[state=active]:shadow-sm">
+          <TabsTrigger value="warranty" className="rounded-lg font-bold data-[state=active]:shadow-sm uppercase text-xs">
             <ShieldCheck className="w-4 h-4 mr-2 hidden xs:inline" /> Bảo Hành
           </TabsTrigger>
-          <TabsTrigger value="products" className="rounded-lg font-bold data-[state=active]:shadow-sm">
-            <Package className="w-4 h-4 mr-2 hidden xs:inline" /> Sản Phẩm
+          <TabsTrigger value="products" className="rounded-lg font-bold data-[state=active]:shadow-sm uppercase text-xs">
+            <Package className="w-4 h-4 mr-2 hidden xs:inline" /> Kho Hàng
           </TabsTrigger>
         </TabsList>
 
@@ -78,7 +71,7 @@ export default function Admin() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Tìm kiếm nhanh..." 
+              placeholder="Tìm kiếm thông tin..." 
               className="pl-10 h-11 rounded-xl border-slate-200 shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -87,74 +80,47 @@ export default function Admin() {
         </div>
 
         <TabsContent value="warranty" className="mt-0">
-          <WarrantyTab 
-            searchQuery={searchQuery} 
-            initialProductName={quickSellData} 
-            onClearQuickSell={() => setQuickSellData(null)} 
-          />
+          <WarrantyTab searchQuery={searchQuery} />
         </TabsContent>
         <TabsContent value="products" className="mt-0">
-          <ProductsTab 
-            searchQuery={searchQuery} 
-            onQuickSell={handleQuickSell}
-          />
+          <ProductsTab searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { searchQuery: string, initialProduct: { id: number, name: string } | null, onClearQuickSell: () => void }) {
+function WarrantyTab({ searchQuery }: { searchQuery: string }) {
   const [warranties, setWarranties] = useState<any[]>([]);
+  const [productsInStock, setProductsInStock] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
-  const [sellingProductId, setSellingProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string>("manual");
   
   const [formData, setFormData] = useState<any>({
     customer_name: "", phone: "", product_name: "", serial_number: "", purchase_date: "", warranty_end_date: "", status: "active", note: ""
   });
 
-  const fetchWarranties = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('warranties')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // Fetch Warranties
+    const { data: wData } = await supabase.from('warranties').select('*').order('created_at', { ascending: false });
+    setWarranties(wData || []);
     
-    if (error) toast.error("Không thể tải dữ liệu bảo hành");
-    else setWarranties(data || []);
+    // Fetch Products in Stock
+    const { data: pData } = await supabase.from('products').select('id, name, brand').order('brand', { ascending: true });
+    setProductsInStock(pData || []);
+    
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    if (initialProduct && !isModalOpen) {
-      setEditId(null);
-      setSellingProductId(initialProduct.id);
-      const newFormData = {
-        customer_name: "", 
-        phone: "", 
-        product_name: initialProduct.name, 
-        serial_number: "", 
-        purchase_date: new Date().toISOString().split('T')[0], 
-        warranty_end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-        status: "active", 
-        note: ""
-      };
-      setFormData(newFormData);
-      setIsModalOpen(true);
-      // We'll clear the quick sell data in the parent after a short delay
-      // to ensure the modal has captured the initial state
-      setTimeout(() => onClearQuickSell(), 100);
-    }
-  }, [initialProduct, isModalOpen, onClearQuickSell]);
-
-  useEffect(() => { fetchWarranties(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const openCreateModal = () => {
     setEditId(null);
-    setSellingProductId(null);
+    setSelectedProductId("manual");
     setFormData({
       customer_name: "", phone: "", product_name: "", serial_number: "", 
       purchase_date: new Date().toISOString().split('T')[0], 
@@ -166,7 +132,7 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
 
   const openEditModal = (w: any) => {
     setEditId(w.id);
-    setSellingProductId(null);
+    setSelectedProductId("manual");
     setFormData({
       customer_name: w.customer_name,
       phone: w.phone,
@@ -178,6 +144,16 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
       note: w.note || ""
     });
     setIsModalOpen(true);
+  };
+
+  const handleProductSelect = (val: string) => {
+    setSelectedProductId(val);
+    if (val !== "manual") {
+      const p = productsInStock.find(item => item.id.toString() === val);
+      if (p) {
+        setFormData({ ...formData, product_name: `${p.brand} ${p.name}`.toUpperCase() });
+      }
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -196,13 +172,12 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
     else {
       toast.success(editId ? "Đã cập nhật" : "Đã kích hoạt bảo hành thành công");
       setIsModalOpen(false);
-      fetchWarranties();
-
-      // IF THIS WAS A QUICK SELL, DELETE THE PRODUCT
-      if (!editId && sellingProductId) {
+      
+      // AUTO-DELETE PRODUCT FROM STOCK IF SELECTED
+      if (!editId && selectedProductId !== "manual") {
         try {
-          // Get product info first to delete images
-          const { data: p } = await supabase.from("products").select("*").eq("id", sellingProductId).single();
+          const pid = parseInt(selectedProductId);
+          const { data: p } = await supabase.from("products").select("*").eq("id", pid).single();
           if (p) {
             const imageFields = ['image_url', 'image_url_2', 'image_url_3', 'image_url_4'];
             const imagesToDelete: string[] = [];
@@ -212,18 +187,14 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
                 if (fileName) imagesToDelete.push(`products/${fileName}`);
               }
             });
-            if (imagesToDelete.length > 0) {
-              await supabase.storage.from('product-images').remove(imagesToDelete);
-            }
+            if (imagesToDelete.length > 0) await supabase.storage.from('product-images').remove(imagesToDelete);
+            await supabase.from("products").delete().eq("id", pid);
+            toast.info("Đã tự động xóa máy khỏi kho hàng");
           }
-          // Delete from DB
-          await supabase.from("products").delete().eq("id", sellingProductId);
-          toast.info("Đã tự động xóa máy khỏi kho hàng");
-          setSellingProductId(null);
-        } catch (err) {
-          console.error("Auto-delete error:", err);
-        }
+        } catch (err) { console.error(err); }
       }
+      
+      fetchData();
     }
   };
 
@@ -234,7 +205,7 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
     else {
       toast.success("Đã xóa hồ sơ");
       setDeleteId(null);
-      fetchWarranties();
+      fetchData();
     }
   };
 
@@ -249,8 +220,8 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Danh sách bảo hành</h3>
-        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm mới</Button>
+        <h3 className="text-xl font-bold flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Quản lý bảo hành</h3>
+        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm hồ sơ</Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -302,40 +273,51 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
             </CardContent>
           </Card>
         ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-            <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm font-medium">Không tìm thấy hồ sơ nào</p>
-          </div>
-        )}
       </div>
 
       {/* Warranty Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-xl w-[95vw] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">{editId ? "Sửa hồ sơ" : "Thêm hồ sơ mới"}</DialogTitle>
+            <DialogTitle className="text-xl font-black">{editId ? "Sửa hồ sơ" : "Thêm hồ sơ bảo hành"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-5 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Tên khách hàng *</Label>
+                <Label className="text-xs font-bold uppercase">Tên khách hàng *</Label>
                 <Input required value={formData.customer_name} onChange={(e) => setFormData({...formData, customer_name: e.target.value})} className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Số điện thoại *</Label>
+                <Label className="text-xs font-bold uppercase">Số điện thoại *</Label>
                 <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="h-10" />
               </div>
+              
               <div className="col-span-1 sm:col-span-2 space-y-1.5">
-                <Label className="text-xs font-bold">Tên sản phẩm *</Label>
-                <Input required value={formData.product_name} onChange={(e) => setFormData({...formData, product_name: e.target.value})} className="h-10" />
+                <Label className="text-xs font-bold uppercase">Chọn máy từ kho (Hoặc nhập tay)</Label>
+                <Select value={selectedProductId} onValueChange={handleProductSelect}>
+                  <SelectTrigger className="h-10 border-primary/20 bg-primary/5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">-- Tự nhập tên máy --</SelectItem>
+                    {productsInStock.map(p => (
+                      <SelectItem key={p.id} value={p.id.toString()}>
+                        [{p.brand.toUpperCase()}] {p.name.toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-bold uppercase">Tên sản phẩm (Hệ thống tự điền)</Label>
+                <Input required value={formData.product_name} onChange={(e) => setFormData({...formData, product_name: e.target.value.toUpperCase()})} className="h-10" />
+              </div>
+              
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Số Serial</Label>
+                <Label className="text-xs font-bold uppercase">Số Serial</Label>
                 <Input value={formData.serial_number} onChange={(e) => setFormData({...formData, serial_number: e.target.value})} className="h-10 font-mono" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Trạng thái</Label>
+                <Label className="text-xs font-bold uppercase">Trạng thái</Label>
                 <Select value={formData.status} onValueChange={(val) => setFormData({...formData, status: val})}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -345,17 +327,17 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Ngày mua *</Label>
+                <Label className="text-xs font-bold uppercase">Ngày mua *</Label>
                 <Input required type="date" value={formData.purchase_date} onChange={(e) => setFormData({...formData, purchase_date: e.target.value})} className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Ngày hết hạn *</Label>
+                <Label className="text-xs font-bold uppercase">Ngày hết hạn *</Label>
                 <Input required type="date" value={formData.warranty_end_date} onChange={(e) => setFormData({...formData, warranty_end_date: e.target.value})} className="h-10" />
               </div>
             </div>
             <DialogFooter className="mt-6 gap-2 sm:gap-0">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold">Hủy</Button>
-              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Lưu hồ sơ</Button>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold uppercase">Hủy</Button>
+              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Kích hoạt bảo hành</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -364,12 +346,12 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent className="rounded-2xl w-[90vw] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-black text-xl">Xác nhận xóa?</AlertDialogTitle>
+            <AlertDialogTitle className="font-black text-xl uppercase">Xác nhận xóa?</AlertDialogTitle>
             <AlertDialogDescription>Hồ sơ bảo hành sẽ bị xóa vĩnh viễn.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-2 gap-2">
-            <AlertDialogCancel className="h-11 rounded-xl font-bold">Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90">Xóa ngay</AlertDialogAction>
+            <AlertDialogCancel className="h-11 rounded-xl font-bold uppercase">Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90 uppercase">Xóa ngay</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -377,7 +359,7 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
   );
 }
 
-function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuickSell: (name: string) => void }) {
+function ProductsTab({ searchQuery }: { searchQuery: string }) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -468,10 +450,8 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
     
     if (error) toast.error("Lỗi khi xóa");
     else {
-      // Delete all 4 images if they exist in storage
       const imageFields = ['image_url', 'image_url_2', 'image_url_3', 'image_url_4'];
       const imagesToDelete: string[] = [];
-
       imageFields.forEach(field => {
         const url = productToDelete?.[field];
         if (url && url.includes('supabase.co/storage')) {
@@ -479,11 +459,7 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
           if (fileName) imagesToDelete.push(`products/${fileName}`);
         }
       });
-
-      if (imagesToDelete.length > 0) {
-        await supabase.storage.from('product-images').remove(imagesToDelete);
-      }
-
+      if (imagesToDelete.length > 0) await supabase.storage.from('product-images').remove(imagesToDelete);
       toast.success("Đã xóa sản phẩm và toàn bộ hình ảnh");
       setDeleteId(null);
       fetchProducts();
@@ -500,13 +476,16 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold flex items-center gap-2"><Package className="w-5 h-5 text-primary" /> Danh sách sản phẩm</h3>
-        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm mới</Button>
+        <h3 className="text-xl font-bold flex items-center gap-2"><Package className="w-5 h-5 text-primary" /> Kho hàng ({products.length})</h3>
+        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm máy mới</Button>
       </div>
 
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filtered.map((p) => (
-          <Card key={p.id} className="overflow-hidden border-slate-200 hover:shadow-md transition-all group flex flex-col rounded-2xl">
+        {filtered.map((p, index) => (
+          <Card key={p.id} className="overflow-hidden border-slate-200 hover:shadow-md transition-all group flex flex-col rounded-2xl relative">
+            <div className="absolute top-2 right-2 z-10 bg-black/70 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border border-white/20">
+              {index + 1}
+            </div>
             <div className="aspect-[4/3] relative bg-slate-50 overflow-hidden">
               <img src={p.image_url || "/images/category-ac.png"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
               <div className="absolute top-2 left-2">
@@ -517,57 +496,43 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
             </div>
             <CardContent className="p-3 flex-grow flex flex-col">
               <p className="text-[9px] font-black text-primary uppercase tracking-[0.1em] mb-0.5">{p.brand}</p>
-              <h4 className="font-bold text-xs line-clamp-2 mb-2 min-h-[32px] tracking-tight">{p.name}</h4>
+              <h4 className="font-bold text-xs line-clamp-2 mb-2 min-h-[32px] tracking-tight uppercase">{p.name}</h4>
               <p className="text-sm font-black text-primary mt-auto">{formatCurrency(p.price)}</p>
             </CardContent>
-            <div className="p-3 pt-0 flex flex-col gap-2">
-              <Button 
-                className="w-full h-9 rounded-xl font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 shadow-sm"
-                onClick={() => onQuickSell(p.id, `${p.brand} ${p.name}`)}
-              >
-                <ShoppingCart className="w-3.5 h-3.5 mr-2" /> BÁN MÁY
+            <div className="p-3 pt-0 flex gap-1.5">
+              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold uppercase" onClick={() => openEditModal(p)}>
+                <Edit2 className="w-3 h-3 mr-1" /> Sửa
               </Button>
-              <div className="flex gap-1.5">
-                <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold" onClick={() => openEditModal(p)}>
-                  <Edit2 className="w-3 h-3 mr-1" /> Sửa
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold text-destructive hover:bg-destructive/5" onClick={() => setDeleteId(p.id)}>
-                  <Trash2 className="w-3 h-3 mr-1" /> Xóa
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold text-destructive hover:bg-destructive/5 uppercase" onClick={() => setDeleteId(p.id)}>
+                <Trash2 className="w-3 h-3 mr-1" /> Xóa
+              </Button>
             </div>
           </Card>
         ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-            <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm font-medium">Chưa có sản phẩm nào</p>
-          </div>
-        )}
       </div>
 
       {/* Product Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl w-[95vw] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">{editId ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
+            <DialogTitle className="text-xl font-black uppercase">{editId ? "Sửa sản phẩm" : "Thêm máy vào kho"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-5 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-1 sm:col-span-2 space-y-1.5">
-                <Label className="text-xs font-bold">Tên sản phẩm *</Label>
-                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-10" />
+                <Label className="text-xs font-bold uppercase">Tên máy *</Label>
+                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})} className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Thương hiệu *</Label>
-                <Input required value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} className="h-10" />
+                <Label className="text-xs font-bold uppercase">Thương hiệu *</Label>
+                <Input required value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Giá bán (VNĐ) *</Label>
+                <Label className="text-xs font-bold uppercase">Giá bán (VNĐ) *</Label>
                 <Input required type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Danh mục</Label>
+                <Label className="text-xs font-bold uppercase">Danh mục</Label>
                 <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -578,7 +543,7 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Tình trạng</Label>
+                <Label className="text-xs font-bold uppercase">Tình trạng</Label>
                 <Select value={formData.condition} onValueChange={(v) => setFormData({...formData, condition: v})}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -588,7 +553,7 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
                 </Select>
               </div>
               <div className="col-span-1 sm:col-span-2 space-y-3">
-                <Label className="text-xs font-bold">Hình ảnh sản phẩm (Tối đa 4 ảnh)</Label>
+                <Label className="text-xs font-bold uppercase">Hình ảnh máy (Tối đa 4 ảnh)</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
                     { id: 'imageUrl', label: 'Ảnh chính' },
@@ -621,13 +586,13 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
                 </div>
               </div>
               <div className="col-span-1 sm:col-span-2 space-y-1.5">
-                <Label className="text-xs font-bold">Mô tả</Label>
-                <Textarea className="min-h-[80px] text-xs" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Thông tin chi tiết sản phẩm..." />
+                <Label className="text-xs font-bold uppercase">Ghi chú chi tiết</Label>
+                <Textarea className="min-h-[80px] text-xs" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Thông số kỹ thuật, ưu điểm..." />
               </div>
             </div>
             <DialogFooter className="mt-4 gap-2 sm:gap-0">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold">Hủy</Button>
-              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Lưu sản phẩm</Button>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold uppercase">Hủy</Button>
+              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Lưu vào kho</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -636,12 +601,12 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent className="rounded-2xl w-[90vw] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-black text-xl">Xóa sản phẩm?</AlertDialogTitle>
-            <AlertDialogDescription>Dữ liệu sản phẩm sẽ bị xóa vĩnh viễn khỏi hệ thống.</AlertDialogDescription>
+            <AlertDialogTitle className="font-black text-xl uppercase">Xóa khỏi kho?</AlertDialogTitle>
+            <AlertDialogDescription>Dữ liệu máy sẽ bị xóa vĩnh viễn khỏi hệ thống.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-2 gap-2">
-            <AlertDialogCancel className="h-11 rounded-xl font-bold">Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90">Xác nhận xóa</AlertDialogAction>
+            <AlertDialogCancel className="h-11 rounded-xl font-bold uppercase">Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90 uppercase">Xóa ngay</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
