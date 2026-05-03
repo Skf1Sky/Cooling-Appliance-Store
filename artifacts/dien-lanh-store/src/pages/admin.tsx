@@ -18,10 +18,29 @@ import { toast } from "sonner";
 export default function Admin() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"warranty">("warranty");
-  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (isAdmin !== "true") {
+      setLocation("/login");
+    } else {
+      setIsAuthLoading(false);
+    }
+  }, [setLocation]);
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleLogout = () => {
-    setLocation("/");
+    localStorage.removeItem("isAdmin");
+    setLocation("/login");
   };
 
   return (
