@@ -316,8 +316,8 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
               </div>
               
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase">Số Serial</Label>
-                <Input value={formData.serial_number} onChange={(e) => setFormData({...formData, serial_number: e.target.value})} className="h-10 font-mono" />
+                <Label className="text-xs font-bold uppercase">Số Serial (Mã máy vĩnh viễn)</Label>
+                <Input readOnly value={formData.serial_number} className="h-10 font-mono bg-slate-50 cursor-not-allowed" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase">Trạng thái</Label>
