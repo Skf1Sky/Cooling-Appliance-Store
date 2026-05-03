@@ -148,13 +148,12 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
 
   const handleProductSelect = (val: string) => {
     setSelectedProductId(val);
-    const index = productsInStock.findIndex(item => item.id.toString() === val);
-    if (index !== -1) {
-      const p = productsInStock[index];
+    const p = productsInStock.find(item => item.id.toString() === val);
+    if (p) {
       setFormData({ 
         ...formData, 
         product_name: `${p.brand} ${p.name}`.toUpperCase(),
-        serial_number: (index + 1).toString() // Auto-fill STT as Serial Number
+        serial_number: p.id.toString() // Use permanent Database ID as Serial Number
       });
     }
   };
@@ -302,9 +301,9 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
                     <SelectValue placeholder="--- Chọn máy từ kho ---" />
                   </SelectTrigger>
                   <SelectContent>
-                    {productsInStock.map((p, idx) => (
+                    {productsInStock.map((p) => (
                       <SelectItem key={p.id} value={p.id.toString()}>
-                        STT {idx + 1}: [{p.brand.toUpperCase()}] {p.name.toUpperCase()}
+                        MÃ: #{p.id} - [{p.brand.toUpperCase()}] {p.name.toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -485,10 +484,10 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
       </div>
 
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filtered.map((p, index) => (
+        {filtered.map((p) => (
           <Card key={p.id} className="overflow-hidden border-slate-200 hover:shadow-md transition-all group flex flex-col rounded-2xl relative">
-            <div className="absolute top-2 right-2 z-10 bg-black/70 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border border-white/20">
-              {index + 1}
+            <div className="absolute top-2 right-2 z-10 bg-black/70 text-white px-2 h-6 rounded-full flex items-center justify-center text-[10px] font-black border border-white/20">
+              #{p.id}
             </div>
             <div className="aspect-[4/3] relative bg-slate-50 overflow-hidden">
               <img src={p.image_url || "/images/category-ac.png"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
