@@ -9,9 +9,7 @@ import {
 
 const NAV_LINKS = [
   { href: "/", label: "Trang Chủ" },
-  { href: "/products?categoryId=1", label: "Máy Lạnh" },
-  { href: "/products?categoryId=2", label: "Máy Giặt" },
-  { href: "/products?categoryId=3", label: "Tủ Lạnh" },
+  { href: "/dich-vu", label: "Dịch Vụ" },
   { href: "/warranty", label: "Kiểm Tra Bảo Hành" },
   { href: "/admin", label: "Quản Trị" },
 ];
