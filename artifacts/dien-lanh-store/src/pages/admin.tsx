@@ -454,9 +454,29 @@ function ProductsTab() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
+      // 1. Get the product info first to get the image URL
+      const productToDelete = products.find(p => p.id === deleteId);
+      
+      // 2. Delete the record from database
       const { error } = await supabase.from("products").delete().eq("id", deleteId);
       if (error) throw error;
-      toast.success("Đã xóa sản phẩm");
+
+      // 3. If there's an image in Supabase storage, try to delete it
+      if (productToDelete?.image_url && productToDelete.image_url.includes('supabase.co/storage')) {
+        try {
+          const urlParts = productToDelete.image_url.split('/');
+          const fileName = urlParts[urlParts.length - 1];
+          const { error: storageError } = await supabase.storage
+            .from('product-images')
+            .remove([`products/${fileName}`]);
+          
+          if (storageError) console.error("Error deleting image from storage:", storageError);
+        } catch (storageErr) {
+          console.error("Failed to parse image URL for deletion:", storageErr);
+        }
+      }
+
+      toast.success("Đã xóa sản phẩm và dữ liệu liên quan");
       setDeleteId(null);
       fetchProducts();
     } catch (error) {

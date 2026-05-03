@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ShoppingCart, Menu, Phone } from "lucide-react";
+import { ShoppingCart, Menu, Phone, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { href: "/products", label: "Sản Phẩm" },
   { href: "/dich-vu", label: "Dịch Vụ" },
   { href: "/warranty", label: "Kiểm Tra Bảo Hành" },
-  { href: "/admin", label: "Quản Trị" },
 ];
 
 export function Header() {
@@ -75,12 +74,18 @@ export function Header() {
         <div className="flex items-center gap-2">
           <a
             href="tel:0898234048"
-            className="flex items-center gap-1.5 text-xs font-700 text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-xs font-700 text-muted-foreground hover:text-primary transition-colors border-r pr-3 mr-1"
             style={{ fontWeight: 700, letterSpacing: "0.02em" }}
           >
             <Phone className="h-3.5 w-3.5" />
-            <span>0898 234 048</span>
+            <span className="hidden sm:inline">0898 234 048</span>
           </a>
+          
+          <Link href="/admin">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary" title="Quản trị hệ thống">
+              <Lock className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
