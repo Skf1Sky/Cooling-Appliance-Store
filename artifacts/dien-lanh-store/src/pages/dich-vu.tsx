@@ -1,112 +1,122 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Wind, RefreshCw, Wrench, Phone, CheckCircle2 } from "lucide-react";
+import { 
+  Wind, 
+  RefreshCw, 
+  Wrench, 
+  Phone, 
+  CheckCircle2, 
+  ChevronRight, 
+  ShieldCheck, 
+  Zap, 
+  HeartHandshake 
+} from "lucide-react";
 
 const SERVICES = [
   {
     icon: Wind,
     title: "Vệ Sinh Máy Lạnh",
-    subtitle: "Làm sạch — Khử khuẩn — Tăng hiệu suất",
-    description:
-      "Vệ sinh máy lạnh định kỳ giúp thiết bị hoạt động bền bỉ, tiết kiệm điện và đảm bảo không khí trong lành cho gia đình bạn.",
-    benefits: [
-      "Vệ sinh dàn lạnh, dàn nóng chuyên sâu",
-      "Khử khuẩn, loại bỏ nấm mốc và vi khuẩn",
-      "Kiểm tra gas và áp suất hoạt động",
-      "Bảo dưỡng động cơ quạt và bộ điều khiển",
-      "Cam kết máy hoạt động ổn định sau dịch vụ",
-    ],
-    color: "bg-sky-50 border-sky-100",
-    iconColor: "bg-sky-100 text-sky-600",
-    badge: "bg-sky-100 text-sky-700",
+    subtitle: "SẠCH SÂU — DIỆT KHUẨN",
+    description: "Vệ sinh máy lạnh định kỳ giúp tăng hiệu suất làm lạnh, tiết kiệm 30% điện năng và bảo vệ sức khỏe gia đình bạn.",
+    benefits: ["Khử nấm mốc chuyên sâu", "Kiểm tra gas miễn phí", "Bảo dưỡng dàn nóng/lạnh"],
+    gradient: "from-blue-600 to-sky-400",
+    shadow: "shadow-blue-200",
+  },
+  {
+    icon: Wrench,
+    title: "Sửa Chữa Chuyên Nghiệp",
+    subtitle: "NHANH CHÓNG — CHÍNH XÁC",
+    description: "Xử lý triệt để mọi sự cố: Máy lạnh không lạnh, máy giặt không vắt, tủ lạnh hỏng block... Linh kiện chính hãng.",
+    benefits: ["Kỹ thuật viên 5 năm kinh nghiệm", "Báo giá trước khi làm", "Bảo hành 6–12 tháng"],
+    gradient: "from-orange-600 to-amber-400",
+    shadow: "shadow-orange-200",
   },
   {
     icon: RefreshCw,
     title: "Thu Cũ Đổi Mới",
-    subtitle: "Định giá hợp lý — Đổi nhanh — Tiết kiệm chi phí",
-    description:
-      "Bạn muốn nâng cấp thiết bị điện lạnh mà không muốn lãng phí máy cũ? Chúng tôi thu mua với giá tốt và hỗ trợ trừ thẳng vào đơn hàng mới.",
-    benefits: [
-      "Thu mua máy lạnh, máy giặt, tủ lạnh đã qua sử dụng",
-      "Định giá nhanh, minh bạch, sát thị trường",
-      "Trừ trực tiếp vào giá sản phẩm mới",
-      "Hỗ trợ vận chuyển và tháo lắp tận nơi",
-      "Thủ tục đơn giản, không mất thêm phí",
-    ],
-    color: "bg-green-50 border-green-100",
-    iconColor: "bg-green-100 text-green-600",
-    badge: "bg-green-100 text-green-700",
+    subtitle: "GIÁ TỐT — TIẾT KIỆM",
+    description: "Hỗ trợ thu mua máy cũ giá cao, đổi máy mới với chiết khấu hấp dẫn. Giải pháp nâng cấp thiết bị tiết kiệm nhất.",
+    benefits: ["Định giá tại nhà", "Trừ thẳng vào máy mới", "Hỗ trợ tháo lắp miễn phí"],
+    gradient: "from-emerald-600 to-teal-400",
+    shadow: "shadow-emerald-200",
   },
-  {
-    icon: Wrench,
-    title: "Sửa Chữa Điện Lạnh",
-    subtitle: "Chuẩn đoán đúng — Sửa nhanh — Bảo hành dịch vụ",
-    description:
-      "Đội ngũ kỹ thuật viên giàu kinh nghiệm xử lý mọi sự cố cho máy lạnh, máy giặt và tủ lạnh các hãng tại nhà bạn.",
-    benefits: [
-      "Sửa chữa máy lạnh: không lạnh, chảy nước, hỏng bo mạch",
-      "Sửa máy giặt: không vắt, rung ồn, không thoát nước",
-      "Sửa tủ lạnh: không mát, đóng tuyết, hỏng máy nén",
-      "Thay thế linh kiện chính hãng",
-      "Bảo hành dịch vụ sửa chữa từ 3–6 tháng",
-    ],
-    color: "bg-orange-50 border-orange-100",
-    iconColor: "bg-orange-100 text-orange-600",
-    badge: "bg-orange-100 text-orange-700",
-  },
+];
+
+const PROCESS = [
+  { step: "01", title: "Tiếp Nhận", desc: "Liên hệ qua Hotline hoặc Zalo để đặt lịch hẹn." },
+  { step: "02", title: "Kiểm Tra", desc: "Kỹ thuật viên đến tận nhà chuẩn đoán sự cố." },
+  { step: "03", title: "Xử Lý", desc: "Sửa chữa nhanh chóng sau khi báo giá minh bạch." },
+  { step: "04", title: "Bàn Giao", desc: "Viết phiếu bảo hành và hướng dẫn sử dụng bền lâu." },
 ];
 
 export default function DichVu() {
   return (
-    <div className="min-h-screen pb-20">
-      {/* Hero */}
-      <section className="bg-slate-900 text-white py-20 px-4">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Dịch Vụ <span className="text-primary">Điện Lạnh</span>
-          </h1>
-          <p className="text-slate-300 text-lg mb-8">
-            Điện Lạnh Minh Hoàng cung cấp đầy đủ các dịch vụ bảo dưỡng và sửa chữa thiết bị điện lạnh chuyên nghiệp tại nhà bạn.
-          </p>
-          <a href="tel:0898234048">
-            <Button size="lg" className="text-base h-12 px-8">
-              <Phone className="w-4 h-4 mr-2" />
-              Gọi ngay: 0898 234 048
-            </Button>
-          </a>
+    <div className="min-h-screen bg-white">
+      {/* Premium Hero Section */}
+      <section className="relative py-24 overflow-hidden bg-slate-950">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
+        
+        <div className="container relative z-10 px-4">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
+              <Zap className="w-3 h-3 fill-primary" />
+              DỊCH VỤ TẬN TÂM — CHẤT LƯỢNG VÀNG
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tighter animate-in fade-in slide-in-from-left-6 duration-700">
+              Chăm Sóc <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Điện Lạnh</span><br />
+              Chuẩn Chuyên Gia
+            </h1>
+            <p className="text-slate-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl animate-in fade-in slide-in-from-left-8 duration-1000">
+              Điện Lạnh Minh Hoàng cung cấp giải pháp sửa chữa, bảo trì máy lạnh, máy giặt, tủ lạnh chuyên nghiệp tại nhà. Chúng tôi cam kết uy tín, đúng giá và bảo hành dài hạn.
+            </p>
+            <div className="flex flex-wrap gap-4 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+              <a href="tel:0898234048">
+                <Button size="lg" className="h-14 px-8 text-base font-bold uppercase tracking-widest shadow-xl shadow-primary/20">
+                  <Phone className="w-5 h-5 mr-2" /> Gọi ngay: 0898 234 048
+                </Button>
+              </a>
+              <Link href="/warranty">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold uppercase tracking-widest text-white border-white/20 hover:bg-white/10">
+                  Tra cứu bảo hành
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Services */}
-      <section className="py-16 container px-4">
+      {/* Services Grid */}
+      <section className="py-24 container px-4 relative -mt-16 z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {SERVICES.map((service) => {
+          {SERVICES.map((service, index) => {
             const Icon = service.icon;
             return (
-              <div
-                key={service.title}
-                className={`rounded-2xl border p-8 flex flex-col ${service.color}`}
+              <div 
+                key={service.title} 
+                className={`group relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl transition-all duration-500 hover:-translate-y-2 ${service.shadow}`}
               >
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 ${service.iconColor}`}>
-                  <Icon className="w-7 h-7" />
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center text-white mb-8 shadow-lg shadow-current/20 group-hover:scale-110 transition-transform duration-500`}>
+                  <Icon className="w-8 h-8" />
                 </div>
-                <h2 className="text-2xl font-bold mb-1">{service.title}</h2>
-                <p className={`text-xs font-semibold uppercase tracking-wide px-2 py-1 rounded-full inline-self-start mb-4 w-fit ${service.badge}`}>
-                  {service.subtitle}
-                </p>
-                <p className="text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
-                <ul className="space-y-2.5 flex-1">
+                <div className="text-xs font-black tracking-[0.2em] text-primary mb-3">{service.subtitle}</div>
+                <h2 className="text-2xl font-black mb-4 tracking-tight">{service.title}</h2>
+                <p className="text-slate-500 mb-8 leading-relaxed text-sm">{service.description}</p>
+                
+                <ul className="space-y-3 mb-10">
                   {service.benefits.map((b) => (
-                    <li key={b} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      <span>{b}</span>
+                    <li key={b} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                      {b}
                     </li>
                   ))}
                 </ul>
-                <a href="tel:0898234048" className="mt-8 block">
-                  <Button className="w-full" variant="default">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Đặt lịch ngay
+                
+                <a href="tel:0898234048" className="mt-auto block">
+                  <Button variant="ghost" className="w-full h-12 rounded-xl group-hover:bg-slate-50 border border-slate-100 font-bold text-xs uppercase tracking-widest">
+                    Đặt lịch ngay <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </a>
               </div>
@@ -115,23 +125,79 @@ export default function DichVu() {
         </div>
       </section>
 
-      {/* Contact CTA */}
-      <section className="py-14 bg-primary/5 border-y">
+      {/* Process Section */}
+      <section className="py-24 bg-slate-50">
         <div className="container px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Liên Hệ Tư Vấn Miễn Phí</h2>
-          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            Gặp sự cố với thiết bị điện lạnh? Gọi ngay để được kỹ thuật viên tư vấn và đặt lịch phục vụ tận nhà.
+          <p className="text-xs font-black tracking-[0.4em] text-primary mb-4 uppercase">Quy trình làm việc</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-16 tracking-tighter">4 Bước Nhanh Chóng</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden lg:block absolute top-10 left-0 right-0 h-0.5 bg-slate-200 z-0" />
+            
+            {PROCESS.map((p) => (
+              <div key={p.step} className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 rounded-full bg-white border-4 border-slate-50 shadow-xl flex items-center justify-center mb-6 text-2xl font-black text-primary">
+                  {p.step}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{p.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed px-4">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <section className="py-24 container px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+          <div className="flex gap-6 items-start">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold mb-2">Bảo Hành Dài Hạn</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">Chúng tôi cung cấp phiếu bảo hành chính hãng từ 6 đến 12 tháng cho mọi dịch vụ.</p>
+            </div>
+          </div>
+          <div className="flex gap-6 items-start">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+              <Zap className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold mb-2">Phục Vụ Siêu Tốc</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">Có mặt trong vòng 30 phút sau khi nhận được yêu cầu trong khu vực nội thành.</p>
+            </div>
+          </div>
+          <div className="flex gap-6 items-start">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <HeartHandshake className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold mb-2">Giá Cả Minh Bạch</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">Kiểm tra miễn phí, báo giá rõ ràng trước khi sửa, cam kết không phát sinh thêm.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 container px-4">
+        <div className="bg-slate-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent" />
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-8 relative z-10">Bạn Cần Hỗ Trợ Ngay?</h2>
+          <p className="text-slate-400 mb-10 max-w-xl mx-auto relative z-10">
+            Đừng để thiết bị hỏng làm ảnh hưởng đến cuộc sống của bạn. Gọi ngay cho chúng tôi để được tư vấn miễn phí.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
             <a href="tel:0898234048">
-              <Button size="lg" className="h-12 px-8">
-                <Phone className="w-4 h-4 mr-2" />
-                0898 234 048
+              <Button size="lg" className="h-16 px-10 text-lg font-bold uppercase tracking-widest">
+                <Phone className="w-5 h-5 mr-3" /> Gọi: 0898 234 048
               </Button>
             </a>
             <Link href="/">
-              <Button size="lg" variant="outline" className="h-12 px-8">
-                Về Trang Chủ
+              <Button size="lg" variant="outline" className="h-16 px-10 text-lg font-bold uppercase tracking-widest text-white border-white/20 hover:bg-white/10">
+                Về trang chủ
               </Button>
             </Link>
           </div>
