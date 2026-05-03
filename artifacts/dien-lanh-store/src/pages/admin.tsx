@@ -129,10 +129,10 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
   };
 
   useEffect(() => {
-    if (initialProduct) {
+    if (initialProduct && !isModalOpen) {
       setEditId(null);
       setSellingProductId(initialProduct.id);
-      setFormData({
+      const newFormData = {
         customer_name: "", 
         phone: "", 
         product_name: initialProduct.name, 
@@ -141,11 +141,14 @@ function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { search
         warranty_end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
         status: "active", 
         note: ""
-      });
+      };
+      setFormData(newFormData);
       setIsModalOpen(true);
-      onClearQuickSell();
+      // We'll clear the quick sell data in the parent after a short delay
+      // to ensure the modal has captured the initial state
+      setTimeout(() => onClearQuickSell(), 100);
     }
-  }, [initialProduct, onClearQuickSell]);
+  }, [initialProduct, isModalOpen, onClearQuickSell]);
 
   useEffect(() => { fetchWarranties(); }, []);
 
