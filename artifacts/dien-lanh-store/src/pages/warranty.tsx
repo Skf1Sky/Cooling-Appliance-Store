@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react";
-import { useCheckWarranty } from "@workspace/api-client-react";
+import { useCheckWarranty, getCheckWarrantyQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,12 @@ export default function Warranty() {
 
   const { data: warranties, isLoading, isError, isFetched } = useCheckWarranty(
     { phone: searchPhone },
-    { query: { enabled: !!searchPhone } }
+    { 
+      query: { 
+        enabled: !!searchPhone,
+        queryKey: getCheckWarrantyQueryKey({ phone: searchPhone })
+      } 
+    }
   );
 
   const handleSearch = (e: React.FormEvent) => {

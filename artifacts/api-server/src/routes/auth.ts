@@ -26,12 +26,12 @@ router.post("/auth/login", async (req, res) => {
   req.session.userId = user.id;
   req.session.role = user.role;
 
-  res.json({ id: user.id, username: user.username, role: user.role });
+  return res.json({ id: user.id, username: user.username, role: user.role });
 });
 
 router.post("/auth/logout", (req, res) => {
   req.session.destroy(() => {
-    res.json({ success: true, message: "Đăng xuất thành công" });
+    return res.json({ success: true, message: "Đăng xuất thành công" });
   });
 });
 
@@ -45,7 +45,7 @@ router.get("/auth/me", async (req, res) => {
     return res.status(401).json({ error: "Không tìm thấy người dùng" });
   }
 
-  res.json({ id: user.id, username: user.username, role: user.role });
+  return res.json({ id: user.id, username: user.username, role: user.role });
 });
 
 export default router;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useGetProduct, useAddToCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import { useGetProduct, useAddToCart, getGetCartQueryKey, getGetProductQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatVND } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,10 @@ export default function ProductDetail() {
   const { toast } = useToast();
   
   const { data: product, isLoading, isError } = useGetProduct(productId, {
-    query: { enabled: !!productId }
+    query: { 
+      enabled: !!productId,
+      queryKey: getGetProductQueryKey(productId)
+    }
   });
 
   const addToCartMutation = useAddToCart();

@@ -15,7 +15,7 @@ router.get("/warranty/check", async (req, res) => {
     .from(warrantiesTable)
     .where(ilike(warrantiesTable.phone, `%${phone.trim()}%`));
 
-  res.json(results.map(w => ({
+  return res.json(results.map(w => ({
     ...w,
     createdAt: w.createdAt.toISOString(),
   })));

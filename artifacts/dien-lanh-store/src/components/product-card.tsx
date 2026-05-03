@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { formatVND } from "@/lib/format";
-import { Product } from "@workspace/api-client-react/src/generated/api.schemas";
+import { Product } from "@workspace/api-client-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";

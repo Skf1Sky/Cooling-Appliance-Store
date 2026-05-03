@@ -8,7 +8,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId || req.session.role !== "admin") {
     return res.status(401).json({ error: "Chưa đăng nhập hoặc không có quyền truy cập" });
   }
-  next();
+  return next();
 }
 
 router.get("/admin/stats", requireAdmin, async (_req, res) => {
@@ -45,7 +45,7 @@ router.get("/admin/stats", requireAdmin, async (_req, res) => {
 
   const totalOrders = ordersByStatus.reduce((sum, row) => sum + Number(row.count), 0);
 
-  res.json({
+  return res.json({
     totalRevenue: Number(totalRevenueRow?.total ?? 0),
     totalOrders,
     totalProducts: Number(totalProductsRow?.count ?? 0),

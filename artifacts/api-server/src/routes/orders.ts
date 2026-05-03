@@ -45,7 +45,7 @@ router.post("/orders", async (req, res) => {
 
   await db.delete(cartItemsTable).where(eq(cartItemsTable.sessionId, sessionId));
 
-  res.status(201).json({
+  return res.status(201).json({
     ...order,
     total: Number(order.total),
     createdAt: order.createdAt.toISOString(),

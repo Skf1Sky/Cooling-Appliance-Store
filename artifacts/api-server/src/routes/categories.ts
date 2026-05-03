@@ -5,7 +5,7 @@ const router = Router();
 
 router.get("/categories", async (_req, res) => {
   const categories = await db.select().from(categoriesTable);
-  res.json(categories);
+  return res.json(categories);
 });
 
 export default router;

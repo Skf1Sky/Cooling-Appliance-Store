@@ -66,7 +66,7 @@ router.get("/products", async (req, res) => {
     .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
     .where(where);
 
-  res.json(products.map(formatProduct));
+  return res.json(products.map(formatProduct));
 });
 
 router.get("/products/featured", async (_req, res) => {
@@ -77,7 +77,7 @@ router.get("/products/featured", async (_req, res) => {
     .where(and(eq(productsTable.isFeatured, true), eq(productsTable.condition, "new")))
     .limit(8);
 
-  res.json(products.map(formatProduct));
+  return res.json(products.map(formatProduct));
 });
 
 router.get("/products/:id", async (req, res) => {
@@ -96,7 +96,7 @@ router.get("/products/:id", async (req, res) => {
     return res.status(404).json({ error: "Product not found" });
   }
 
-  res.json(formatProduct(product as Record<string, unknown>));
+  return res.json(formatProduct(product as Record<string, unknown>));
 });
 
 export default router;

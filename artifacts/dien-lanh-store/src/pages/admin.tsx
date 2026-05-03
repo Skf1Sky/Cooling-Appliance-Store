@@ -43,7 +43,8 @@ export default function Admin() {
   
   const { data: user, isLoading: isAuthLoading, isError: isAuthError } = useGetMe({
     query: {
-      retry: false
+      retry: false,
+      queryKey: getGetMeQueryKey()
     }
   });
 
@@ -388,8 +389,8 @@ function OrdersTab() {
               <TableRow key={order.id}>
                 <TableCell className="font-medium">#{order.id}</TableCell>
                 <TableCell>{order.customerName}</TableCell>
-                <TableCell>{order.phone}</TableCell>
-                <TableCell>{formatCurrency(Number(order.totalAmount))}</TableCell>
+                <TableCell>{order.customerPhone}</TableCell>
+                <TableCell>{formatCurrency(Number(order.total))}</TableCell>
                 <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>

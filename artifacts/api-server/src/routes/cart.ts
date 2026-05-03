@@ -40,7 +40,7 @@ async function getCartData(sessionId: string) {
 router.get("/cart", async (req, res) => {
   const sessionId = (req.cookies?.sessionId as string) || SESSION_ID;
   const cart = await getCartData(sessionId);
-  res.json(cart);
+  return res.json(cart);
 });
 
 router.post("/cart/items", async (req, res) => {
@@ -67,7 +67,7 @@ router.post("/cart/items", async (req, res) => {
   }
 
   const cart = await getCartData(sessionId);
-  res.json(cart);
+  return res.json(cart);
 });
 
 router.put("/cart/items/:itemId", async (req, res) => {
@@ -92,7 +92,7 @@ router.put("/cart/items/:itemId", async (req, res) => {
   }
 
   const cart = await getCartData(sessionId);
-  res.json(cart);
+  return res.json(cart);
 });
 
 router.delete("/cart/items/:itemId", async (req, res) => {
@@ -107,7 +107,7 @@ router.delete("/cart/items/:itemId", async (req, res) => {
     .where(and(eq(cartItemsTable.id, parsed.data.itemId), eq(cartItemsTable.sessionId, sessionId)));
 
   const cart = await getCartData(sessionId);
-  res.json(cart);
+  return res.json(cart);
 });
 
 export default router;
