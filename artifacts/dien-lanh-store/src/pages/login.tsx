@@ -45,9 +45,6 @@ export default function Login() {
             <span className="text-3xl font-bold text-primary tracking-tight">ĐIỆN LẠNH<span className="text-foreground"> MINH HOÀNG</span></span>
           </div>
           <CardTitle className="text-2xl font-bold">Đăng nhập quản trị</CardTitle>
-          <CardDescription>
-            Tài khoản: admin / Mật khẩu: admin123
-          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
