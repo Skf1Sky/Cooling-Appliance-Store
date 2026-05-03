@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "pnpm --filter @workspace/dien-lanh-store run build",
   "installCommand": "pnpm install --frozen-lockfile",
-  "outputDirectory": "dist/public",
+  "outputDirectory": "public",
   "framework": null,
   "rewrites": [
     {
