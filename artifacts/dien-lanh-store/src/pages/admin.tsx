@@ -371,8 +371,8 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
-      name: formData.name,
-      brand: formData.brand || "Khác",
+      name: formData.name.toUpperCase(),
+      brand: (formData.brand || "KHÁC").toUpperCase(),
       price: parseInt(formData.price),
       description: formData.description,
       condition: formData.condition,

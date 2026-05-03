@@ -38,8 +38,8 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </CardHeader>
         <CardContent className="p-4 flex-grow flex flex-col">
-          <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-            <span className="font-black text-primary mr-1.5 uppercase tracking-tight">{product.brand}</span>
+          <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors uppercase">
+            <span className="font-black text-primary mr-1.5 tracking-tight">{product.brand}</span>
             {product.name}
           </h3>
           {isUsed && (

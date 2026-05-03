@@ -109,8 +109,8 @@ export default function ProductDetail() {
               </span>
             </div>
             
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 leading-tight">
-              <span className="text-primary mr-2 uppercase">{product.brand}</span>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 leading-tight uppercase">
+              <span className="text-primary mr-2">{product.brand}</span>
               {product.name}
             </h1>
             
