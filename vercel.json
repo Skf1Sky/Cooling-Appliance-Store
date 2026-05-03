@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "pnpm --filter @workspace/dien-lanh-store run build && cp -r artifacts/dien-lanh-store/dist/public public",
-  "outputDirectory": "public",
+  "buildCommand": "pnpm --filter @workspace/dien-lanh-store run build",
+  "outputDirectory": "artifacts/dien-lanh-store/dist/public",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "functions": {
