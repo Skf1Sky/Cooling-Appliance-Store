@@ -400,13 +400,26 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
     if (!deleteId) return;
     const productToDelete = products.find(p => p.id === deleteId);
     const { error } = await supabase.from("products").delete().eq("id", deleteId);
+    
     if (error) toast.error("Lỗi khi xóa");
     else {
-      if (productToDelete?.image_url?.includes('supabase.co/storage')) {
-        const fileName = productToDelete.image_url.split('/').pop();
-        await supabase.storage.from('product-images').remove([`products/${fileName}`]);
+      // Delete all 4 images if they exist in storage
+      const imageFields = ['image_url', 'image_url_2', 'image_url_3', 'image_url_4'];
+      const imagesToDelete: string[] = [];
+
+      imageFields.forEach(field => {
+        const url = productToDelete?.[field];
+        if (url && url.includes('supabase.co/storage')) {
+          const fileName = url.split('/').pop();
+          if (fileName) imagesToDelete.push(`products/${fileName}`);
+        }
+      });
+
+      if (imagesToDelete.length > 0) {
+        await supabase.storage.from('product-images').remove(imagesToDelete);
       }
-      toast.success("Đã xóa sản phẩm");
+
+      toast.success("Đã xóa sản phẩm và toàn bộ hình ảnh");
       setDeleteId(null);
       fetchProducts();
     }

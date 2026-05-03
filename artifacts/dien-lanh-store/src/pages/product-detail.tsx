@@ -124,8 +124,8 @@ export default function ProductDetail() {
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Bảo hành dài hạn</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Tất cả sản phẩm đều được hỗ trợ bảo hành tận nơi từ 6-12 tháng.</p>
+                  <p className="text-sm font-bold text-slate-900">Bảo hành 3-6 tháng</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Tất cả sản phẩm đều được hỗ trợ bảo hành tận nơi từ 3-6 tháng.</p>
                 </div>
               </div>
               
@@ -134,8 +134,8 @@ export default function ProductDetail() {
                   <Truck className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Lắp đặt & Giao hàng</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Hỗ trợ vận chuyển và lắp đặt chuyên nghiệp trong ngày.</p>
+                  <p className="text-sm font-bold text-slate-900">Miễn phí ship 15km</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Hỗ trợ vận chuyển và lắp đặt chuyên nghiệp, miễn phí trong vòng 15km.</p>
                 </div>
               </div>
             </div>
