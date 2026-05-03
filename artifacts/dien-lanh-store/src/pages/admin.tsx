@@ -6,23 +6,23 @@ import { slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Search, Phone, User, Calendar, CreditCard, Filter } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Check if user is logged in
     const isAdmin = localStorage.getItem("isAdmin");
     if (isAdmin !== "true") {
       setLocation("/login");
@@ -31,71 +31,76 @@ export default function Admin() {
     }
   }, [setLocation]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("isAdmin");
+    setLocation("/login");
+    toast.success("Đã đăng xuất");
+  };
+
   if (isAuthLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[80vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAdmin");
-    setLocation("/login");
-  };
-
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-muted/30 border-r flex flex-col">
-        <div className="p-6">
-          <h2 className="text-xl font-bold tracking-tight text-primary">Quản Trị</h2>
-          <p className="text-sm text-muted-foreground mt-1">Hệ thống bảo hành</p>
+    <div className="container mx-auto px-4 py-6 md:py-10 max-w-7xl">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1">Bảng Quản Trị</h1>
+          <p className="text-muted-foreground text-sm">Chào mừng quay trở lại, Admin</p>
         </div>
-        <nav className="flex-1 px-4 space-y-2">
-          <Button 
-            variant={activeTab === "warranty" ? "secondary" : "ghost"} 
-            className="w-full justify-start"
-            onClick={() => setActiveTab("warranty")}
-          >
-            <ShieldCheck className="w-4 h-4 mr-2" /> Bảo Hành
-          </Button>
-          <Button 
-            variant={activeTab === "products" ? "secondary" : "ghost"} 
-            className="w-full justify-start"
-            onClick={() => setActiveTab("products")}
-          >
-            <Package className="w-4 h-4 mr-2" /> Sản Phẩm
-          </Button>
-        </nav>
-        <div className="p-4 border-t">
-          <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" /> Đăng Xuất
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto h-11 border-slate-200">
+          <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
+        </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-background">
-        <div className="p-8">
-          {activeTab === "warranty" && <WarrantyTab />}
-          {activeTab === "products" && <ProductsTab />}
+      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-slate-100 rounded-xl">
+          <TabsTrigger value="warranty" className="rounded-lg font-bold data-[state=active]:shadow-sm">
+            <ShieldCheck className="w-4 h-4 mr-2 hidden xs:inline" /> Bảo Hành
+          </TabsTrigger>
+          <TabsTrigger value="products" className="rounded-lg font-bold data-[state=active]:shadow-sm">
+            <Package className="w-4 h-4 mr-2 hidden xs:inline" /> Sản Phẩm
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Tìm kiếm nhanh..." 
+              className="pl-10 h-11 rounded-xl border-slate-200 shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+
+        <TabsContent value="warranty" className="mt-0">
+          <WarrantyTab searchQuery={searchQuery} />
+        </TabsContent>
+        <TabsContent value="products" className="mt-0">
+          <ProductsTab searchQuery={searchQuery} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
 
-function WarrantyTab() {
+function WarrantyTab({ searchQuery }: { searchQuery: string }) {
   const [warranties, setWarranties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<any>({
     customer_name: "", phone: "", product_name: "", serial_number: "", purchase_date: "", warranty_end_date: "", status: "active", note: ""
   });
-  const [editId, setEditId] = useState<number | null>(null);
 
   const fetchWarranties = async () => {
     setIsLoading(true);
@@ -104,22 +109,20 @@ function WarrantyTab() {
       .select('*')
       .order('created_at', { ascending: false });
     
-    if (error) {
-      toast.error("Không thể tải dữ liệu bảo hành");
-    } else {
-      setWarranties(data || []);
-    }
+    if (error) toast.error("Không thể tải dữ liệu bảo hành");
+    else setWarranties(data || []);
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchWarranties();
-  }, []);
+  useEffect(() => { fetchWarranties(); }, []);
 
   const openCreateModal = () => {
     setEditId(null);
     setFormData({
-      customer_name: "", phone: "", product_name: "", serial_number: "", purchase_date: new Date().toISOString().split('T')[0], warranty_end_date: "", status: "active", note: ""
+      customer_name: "", phone: "", product_name: "", serial_number: "", 
+      purchase_date: new Date().toISOString().split('T')[0], 
+      warranty_end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      status: "active", note: ""
     });
     setIsModalOpen(true);
   };
@@ -147,164 +150,161 @@ function WarrantyTab() {
       warranty_end_date: new Date(formData.warranty_end_date).toISOString(),
     };
 
-    if (editId) {
-      const { error } = await supabase.from('warranties').update(payload).eq('id', editId);
-      if (error) {
-        toast.error("Lỗi khi cập nhật");
-      } else {
-        toast.success("Cập nhật thành công");
-        setIsModalOpen(false);
-        fetchWarranties();
-      }
-    } else {
-      const { error } = await supabase.from('warranties').insert([payload]);
-      if (error) {
-        toast.error("Lỗi khi thêm mới");
-      } else {
-        toast.success("Thêm mới thành công");
-        setIsModalOpen(false);
-        fetchWarranties();
-      }
+    const { error } = editId 
+      ? await supabase.from('warranties').update(payload).eq('id', editId)
+      : await supabase.from('warranties').insert([payload]);
+
+    if (error) toast.error("Lỗi khi lưu dữ liệu");
+    else {
+      toast.success(editId ? "Đã cập nhật" : "Đã thêm mới");
+      setIsModalOpen(false);
+      fetchWarranties();
     }
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
     const { error } = await supabase.from('warranties').delete().eq('id', deleteId);
-    if (error) {
-      toast.error("Lỗi khi xóa");
-    } else {
-      toast.success("Xóa thành công");
+    if (error) toast.error("Lỗi khi xóa");
+    else {
+      toast.success("Đã xóa hồ sơ");
       setDeleteId(null);
       fetchWarranties();
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active": return <Badge className="bg-green-500">Còn bảo hành</Badge>;
-      case "expired": return <Badge variant="destructive">Hết bảo hành</Badge>;
-      case "pending": return <Badge className="bg-yellow-500">Chờ kích hoạt</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  const filtered = warranties.filter(w => 
+    w.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    w.phone.includes(searchQuery) ||
+    w.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold">Quản lý Bảo Hành</h3>
-        <Button onClick={openCreateModal}><Plus className="w-4 h-4 mr-2" /> Thêm hồ sơ bảo hành</Button>
+        <h3 className="text-xl font-bold flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Danh sách bảo hành</h3>
+        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm mới</Button>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Khách hàng</TableHead>
-              <TableHead>SĐT</TableHead>
-              <TableHead>Sản phẩm</TableHead>
-              <TableHead>Serial</TableHead>
-              <TableHead>Ngày mua</TableHead>
-              <TableHead>Hết hạn</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {warranties.map((w) => (
-              <TableRow key={w.id}>
-                <TableCell>{w.customer_name}</TableCell>
-                <TableCell>{w.phone}</TableCell>
-                <TableCell>{w.product_name}</TableCell>
-                <TableCell className="font-mono text-sm">{w.serial_number || "-"}</TableCell>
-                <TableCell>{formatDate(w.purchase_date)}</TableCell>
-                <TableCell>{formatDate(w.warranty_end_date)}</TableCell>
-                <TableCell>{getStatusBadge(w.status)}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEditModal(w)}>
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-red-500" onClick={() => setDeleteId(w.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {warranties.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Không có hồ sơ bảo hành nào.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      <div className="grid grid-cols-1 gap-4">
+        {filtered.map((w) => (
+          <Card key={w.id} className="border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-base tracking-tight leading-none mb-1">{w.customer_name}</h4>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> {w.phone}</p>
+                  </div>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest self-start sm:self-center ${w.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                  {w.status === 'active' ? '● Còn hạn' : '○ Hết hạn'}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y border-slate-100">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sản phẩm</p>
+                  <p className="text-xs font-bold line-clamp-1">{w.product_name}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Serial</p>
+                  <p className="text-xs font-bold font-mono">{w.serial_number || "---"}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ngày mua</p>
+                  <p className="text-xs font-bold">{formatDate(w.purchase_date)}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Hết hạn</p>
+                  <p className="text-xs font-bold">{formatDate(w.warranty_end_date)}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="ghost" size="sm" className="h-9 px-3 font-bold text-primary hover:bg-primary/5" onClick={() => openEditModal(w)}>
+                  <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Sửa
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9 px-3 font-bold text-destructive hover:bg-destructive/5" onClick={() => setDeleteId(w.id)}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Xóa
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm font-medium">Không tìm thấy hồ sơ nào</p>
+          </div>
+        )}
       </div>
 
+      {/* Warranty Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xl w-[95vw] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editId ? "Sửa hồ sơ bảo hành" : "Thêm hồ sơ bảo hành"}</DialogTitle>
+            <DialogTitle className="text-xl font-black">{editId ? "Sửa hồ sơ" : "Thêm hồ sơ mới"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tên khách hàng</Label>
-                <Input required value={formData.customer_name} onChange={(e) => setFormData({...formData, customer_name: e.target.value})} />
+          <form onSubmit={handleSave} className="space-y-5 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Tên khách hàng *</Label>
+                <Input required value={formData.customer_name} onChange={(e) => setFormData({...formData, customer_name: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Số điện thoại</Label>
-                <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Số điện thoại *</Label>
+                <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Tên sản phẩm</Label>
-                <Input required value={formData.product_name} onChange={(e) => setFormData({...formData, product_name: e.target.value})} />
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-bold">Tên sản phẩm *</Label>
+                <Input required value={formData.product_name} onChange={(e) => setFormData({...formData, product_name: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Số Serial</Label>
-                <Input value={formData.serial_number} onChange={(e) => setFormData({...formData, serial_number: e.target.value})} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Số Serial</Label>
+                <Input value={formData.serial_number} onChange={(e) => setFormData({...formData, serial_number: e.target.value})} className="h-10 font-mono" />
               </div>
-              <div className="space-y-2">
-                <Label>Ngày mua</Label>
-                <Input required type="date" value={formData.purchase_date} onChange={(e) => setFormData({...formData, purchase_date: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>Ngày hết hạn</Label>
-                <Input required type="date" value={formData.warranty_end_date} onChange={(e) => setFormData({...formData, warranty_end_date: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>Trạng thái</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Trạng thái</Label>
                 <Select value={formData.status} onValueChange={(val) => setFormData({...formData, status: val})}>
-                  <SelectTrigger><SelectValue placeholder="Chọn trạng thái" /></SelectTrigger>
+                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Còn bảo hành</SelectItem>
                     <SelectItem value="expired">Hết bảo hành</SelectItem>
-                    <SelectItem value="pending">Chờ kích hoạt</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Ghi chú</Label>
-                <Textarea value={formData.note} onChange={(e) => setFormData({...formData, note: e.target.value})} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Ngày mua *</Label>
+                <Input required type="date" value={formData.purchase_date} onChange={(e) => setFormData({...formData, purchase_date: e.target.value})} className="h-10" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Ngày hết hạn *</Label>
+                <Input required type="date" value={formData.warranty_end_date} onChange={(e) => setFormData({...formData, warranty_end_date: e.target.value})} className="h-10" />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-              <Button type="submit">Lưu</Button>
+            <DialogFooter className="mt-6 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold">Hủy</Button>
+              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Lưu hồ sơ</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl w-[90vw] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-            <AlertDialogDescription>Bạn có chắc chắn muốn xóa hồ sơ này? Hành động này không thể hoàn tác.</AlertDialogDescription>
+            <AlertDialogTitle className="font-black text-xl">Xác nhận xóa?</AlertDialogTitle>
+            <AlertDialogDescription>Hồ sơ bảo hành sẽ bị xóa vĩnh viễn.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Xóa</AlertDialogAction>
+          <AlertDialogFooter className="mt-2 gap-2">
+            <AlertDialogCancel className="h-11 rounded-xl font-bold">Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90">Xóa ngay</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -312,276 +312,173 @@ function WarrantyTab() {
   );
 }
 
-function ProductsTab() {
+function ProductsTab({ searchQuery }: { searchQuery: string }) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    description: "",
-    condition: "new",
-    category_id: "1",
-    brand: "",
-    imageUrl: ""
-  });
-  const [uploading, setUploading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: ""
+  });
 
   const fetchProducts = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    if (error) toast.error("Không thể tải danh sách sản phẩm");
+    else setProducts(data || []);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useEffect(() => { fetchProducts(); }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
       if (!e.target.files || e.target.files.length === 0) return;
-      
       const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
+      const fileName = `${Math.random()}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(`products/${fileName}`, file);
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`products/${fileName}`);
       setFormData({ ...formData, imageUrl: publicUrl });
-      toast.success("Đã tải ảnh lên");
+      toast.success("Tải ảnh thành công");
     } catch (error) {
-      console.error('Error:', error);
-      toast.error("Không thể tải ảnh lên. Hãy chắc chắn bạn đã tạo bucket 'product-images' trên Supabase.");
-    } finally {
-      setUploading(false);
-    }
+      toast.error("Lỗi khi tải ảnh");
+    } finally { setUploading(false); }
   };
 
   const openCreateModal = () => {
     setEditId(null);
-    setFormData({
-      name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: ""
-    });
+    setFormData({ name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: "" });
     setIsModalOpen(true);
   };
 
   const openEditModal = (p: any) => {
     setEditId(p.id);
     setFormData({
-      name: p.name,
-      price: p.price.toString(),
-      description: p.description || "",
-      condition: p.condition || "new",
-      category_id: p.category_id.toString(),
-      brand: p.brand || "",
-      imageUrl: p.image_url || ""
+      name: p.name, price: p.price.toString(), description: p.description || "",
+      condition: p.condition || "new", category_id: p.category_id.toString(),
+      brand: p.brand || "", imageUrl: p.image_url || ""
     });
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const payload = {
-        name: formData.name,
-        slug: slugify(formData.name) + "-" + Math.random().toString(36).substring(2, 7),
-        brand: formData.brand || "Khác",
-        price: parseInt(formData.price),
-        description: formData.description,
-        condition: formData.condition,
-        category_id: parseInt(formData.category_id),
-        image_url: formData.imageUrl,
-      };
+    const payload = {
+      name: formData.name,
+      brand: formData.brand || "Khác",
+      price: parseInt(formData.price),
+      description: formData.description,
+      condition: formData.condition,
+      category_id: parseInt(formData.category_id),
+      image_url: formData.imageUrl,
+      slug: editId ? undefined : `${slugify(formData.name)}-${Math.random().toString(36).substring(2, 7)}`
+    };
 
-      if (editId) {
-        // When updating, we don't necessarily want to change the slug unless the name changes
-        // For simplicity, we just update everything except slug if it's already set
-        const { error } = await supabase
-          .from("products")
-          .update({
-            name: payload.name,
-            brand: payload.brand,
-            price: payload.price,
-            description: payload.description,
-            condition: payload.condition,
-            category_id: payload.category_id,
-            image_url: payload.image_url,
-          })
-          .eq("id", editId);
-        
-        if (error) throw error;
-        toast.success("Đã cập nhật sản phẩm");
-      } else {
-        const { error } = await supabase
-          .from("products")
-          .insert([payload]);
-        
-        if (error) throw error;
-        toast.success("Đã thêm sản phẩm mới");
-      }
-      
+    const { error } = editId 
+      ? await supabase.from("products").update(payload).eq("id", editId)
+      : await supabase.from("products").insert([payload]);
+    
+    if (error) toast.error("Lỗi khi lưu sản phẩm");
+    else {
+      toast.success(editId ? "Đã cập nhật" : "Đã thêm mới");
       setIsModalOpen(false);
       fetchProducts();
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Không thể lưu sản phẩm. Vui lòng kiểm tra lại bảng products trên Supabase.");
     }
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    try {
-      // 1. Get the product info first to get the image URL
-      const productToDelete = products.find(p => p.id === deleteId);
-      
-      // 2. Delete the record from database
-      const { error } = await supabase.from("products").delete().eq("id", deleteId);
-      if (error) throw error;
-
-      // 3. If there's an image in Supabase storage, try to delete it
-      if (productToDelete?.image_url && productToDelete.image_url.includes('supabase.co/storage')) {
-        try {
-          const urlParts = productToDelete.image_url.split('/');
-          const fileName = urlParts[urlParts.length - 1];
-          const { error: storageError } = await supabase.storage
-            .from('product-images')
-            .remove([`products/${fileName}`]);
-          
-          if (storageError) console.error("Error deleting image from storage:", storageError);
-        } catch (storageErr) {
-          console.error("Failed to parse image URL for deletion:", storageErr);
-        }
+    const productToDelete = products.find(p => p.id === deleteId);
+    const { error } = await supabase.from("products").delete().eq("id", deleteId);
+    if (error) toast.error("Lỗi khi xóa");
+    else {
+      if (productToDelete?.image_url?.includes('supabase.co/storage')) {
+        const fileName = productToDelete.image_url.split('/').pop();
+        await supabase.storage.from('product-images').remove([`products/${fileName}`]);
       }
-
-      toast.success("Đã xóa sản phẩm và dữ liệu liên quan");
+      toast.success("Đã xóa sản phẩm");
       setDeleteId(null);
       fetchProducts();
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Không thể xóa sản phẩm");
     }
   };
 
+  const filtered = products.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Quản Lý Sản Phẩm</h2>
-          <p className="text-muted-foreground">Nhập và quản lý danh sách sản phẩm trong kho</p>
-        </div>
-        <Button onClick={openCreateModal}>
-          <Plus className="w-4 h-4 mr-2" /> Thêm Sản Phẩm
-        </Button>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold flex items-center gap-2"><Package className="w-5 h-5 text-primary" /> Danh sách sản phẩm</h3>
+        <Button onClick={openCreateModal} size="sm" className="font-bold rounded-xl"><Plus className="w-4 h-4 mr-1.5" /> Thêm mới</Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">Ảnh</TableHead>
-                <TableHead>Tên Sản Phẩm</TableHead>
-                <TableHead>Thương hiệu</TableHead>
-                <TableHead>Giá</TableHead>
-                <TableHead>Tình Trạng</TableHead>
-                <TableHead className="text-right">Hành động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ) : products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Chưa có sản phẩm nào. Hãy nhấn "Thêm Sản Phẩm" để bắt đầu.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                products.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      {p.image_url ? (
-                        <img src={p.image_url} alt="" className="w-10 h-10 object-cover rounded border" />
-                      ) : (
-                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                          <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell>{p.brand || "-"}</TableCell>
-                    <TableCell>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price)}</TableCell>
-                    <TableCell>
-                      <Badge variant={p.condition === 'new' ? 'default' : 'secondary'}>
-                        {p.condition === 'new' ? 'Mới' : 'Cũ'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEditModal(p)}>
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => setDeleteId(p.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filtered.map((p) => (
+          <Card key={p.id} className="overflow-hidden border-slate-200 hover:shadow-md transition-all group flex flex-col rounded-2xl">
+            <div className="aspect-[4/3] relative bg-slate-50 overflow-hidden">
+              <img src={p.image_url || "/images/category-ac.png"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
+              <div className="absolute top-2 left-2">
+                <Badge className={`${p.condition === 'new' ? 'bg-green-500' : 'bg-amber-500'} text-[9px] px-1.5 py-0 font-black uppercase tracking-widest`}>
+                  {p.condition === 'new' ? 'Mới' : 'Cũ'}
+                </Badge>
+              </div>
+            </div>
+            <CardContent className="p-3 flex-grow flex flex-col">
+              <p className="text-[9px] font-black text-primary uppercase tracking-[0.1em] mb-0.5">{p.brand}</p>
+              <h4 className="font-bold text-xs line-clamp-2 mb-2 min-h-[32px] tracking-tight">{p.name}</h4>
+              <p className="text-sm font-black text-primary mt-auto">{formatCurrency(p.price)}</p>
+            </CardContent>
+            <div className="p-3 pt-0 flex gap-1.5">
+              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold" onClick={() => openEditModal(p)}>
+                <Edit2 className="w-3 h-3 mr-1" /> Sửa
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-[11px] font-bold text-destructive hover:bg-destructive/5" onClick={() => setDeleteId(p.id)}>
+                <Trash2 className="w-3 h-3 mr-1" /> Xóa
+              </Button>
+            </div>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm font-medium">Chưa có sản phẩm nào</p>
+          </div>
+        )}
+      </div>
 
+      {/* Product Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editId ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
+            <DialogTitle className="text-xl font-black">{editId ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2">
-                <Label>Tên sản phẩm</Label>
-                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="VD: Máy lạnh Daikin 1.5HP" />
+          <form onSubmit={handleSubmit} className="space-y-5 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-bold">Tên sản phẩm *</Label>
+                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Thương hiệu</Label>
-                <Input required value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} placeholder="VD: Daikin, Panasonic..." />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Thương hiệu *</Label>
+                <Input required value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Giá bán (VNĐ)</Label>
-                <Input required type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="12000000" />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Giá bán (VNĐ) *</Label>
+                <Input required type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label>Danh mục</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Danh mục</Label>
                 <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
-                  <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
+                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">Máy Lạnh</SelectItem>
                     <SelectItem value="2">Máy Giặt</SelectItem>
@@ -589,72 +486,57 @@ function ProductsTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Tình trạng</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Tình trạng</Label>
                 <Select value={formData.condition} onValueChange={(v) => setFormData({...formData, condition: v})}>
-                  <SelectTrigger><SelectValue placeholder="Chọn tình trạng" /></SelectTrigger>
+                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">Mới</SelectItem>
-                    <SelectItem value="used">Cũ / Like New</SelectItem>
+                    <SelectItem value="new">Hàng Mới</SelectItem>
+                    <SelectItem value="used">Hàng Cũ / Like New</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Hình ảnh sản phẩm</Label>
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-4">
-                    <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="flex-1" />
-                    {uploading && <Loader2 className="w-5 h-5 animate-spin" />}
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-bold">Hình ảnh</Label>
+                <div className="flex flex-col gap-3 p-3 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="bg-white flex-1 h-9 text-xs" />
+                    {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground">
-                      <ImageIcon className="w-4 h-4" />
-                    </div>
-                    <Input 
-                      value={formData.imageUrl} 
-                      onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
-                      placeholder="Hoặc dán link ảnh trực tiếp vào đây..." 
-                      className="pl-10"
-                    />
+                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} placeholder="Hoặc dán link ảnh..." className="pl-9 bg-white h-9 text-xs" />
                   </div>
                 </div>
                 {formData.imageUrl && (
-                  <div className="mt-2 relative w-32 h-32 rounded-xl overflow-hidden border shadow-sm">
-                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="Preview" />
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      size="icon" 
-                      className="absolute top-1 right-1 h-6 w-6 rounded-full"
-                      onClick={() => setFormData({...formData, imageUrl: ""})}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm mt-1">
+                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
+                    <button type="button" onClick={() => setFormData({...formData, imageUrl: ""})} className="absolute top-0.5 right-0.5 bg-destructive text-white rounded-full p-0.5"><X className="w-2.5 h-2.5" /></button>
                   </div>
                 )}
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Mô tả</Label>
-                <Textarea className="min-h-[100px]" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Nhập thông tin chi tiết về sản phẩm..." />
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-bold">Mô tả</Label>
+                <Textarea className="min-h-[80px] text-xs" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Thông tin chi tiết sản phẩm..." />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-              <Button type="submit">Lưu Sản Phẩm</Button>
+            <DialogFooter className="mt-4 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none h-11 rounded-xl font-bold">Hủy</Button>
+              <Button type="submit" className="flex-1 sm:flex-none h-11 rounded-xl font-bold px-8 uppercase tracking-widest">Lưu sản phẩm</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl w-[90vw] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-            <AlertDialogDescription>Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống? Hành động này không thể hoàn tác.</AlertDialogDescription>
+            <AlertDialogTitle className="font-black text-xl">Xóa sản phẩm?</AlertDialogTitle>
+            <AlertDialogDescription>Dữ liệu sản phẩm sẽ bị xóa vĩnh viễn khỏi hệ thống.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Xóa</AlertDialogAction>
+          <AlertDialogFooter className="mt-2 gap-2">
+            <AlertDialogCancel className="h-11 rounded-xl font-bold">Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-11 rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90">Xác nhận xóa</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
