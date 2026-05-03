@@ -8,10 +8,6 @@ import { Footer } from "@/components/footer";
 import { Loader2, Phone, X } from "lucide-react";
 
 const Home = lazy(() => import("@/pages/home"));
-const Products = lazy(() => import("@/pages/products"));
-const ProductDetail = lazy(() => import("@/pages/product-detail"));
-const Cart = lazy(() => import("@/pages/cart"));
-const Checkout = lazy(() => import("@/pages/checkout"));
 const Login = lazy(() => import("@/pages/login"));
 const Warranty = lazy(() => import("@/pages/warranty"));
 const Admin = lazy(() => import("@/pages/admin"));
@@ -107,10 +103,6 @@ function Router() {
         <Suspense fallback={<PageLoader />}>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/products" component={Products} />
-            <Route path="/products/:id" component={ProductDetail} />
-            <Route path="/cart" component={Cart} />
-            <Route path="/checkout" component={Checkout} />
             <Route path="/login" component={Login} />
             <Route path="/warranty" component={Warranty} />
             <Route path="/dich-vu" component={DichVu} />

@@ -163,11 +163,6 @@ export default function GioiThieu() {
                   <Phone className="w-4 h-4 mr-2" /> Gọi Ngay
                 </Button>
               </a>
-              <Link href="/products" className="flex-1">
-                <Button variant="outline" className="w-full font-bold tracking-widest uppercase text-xs h-11">
-                  Xem Sản Phẩm
-                </Button>
-              </Link>
             </div>
           </div>
 
