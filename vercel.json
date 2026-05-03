@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "cd artifacts/dien-lanh-store && pnpm install --no-frozen-lockfile && pnpm build",
-  "outputDirectory": "artifacts/dien-lanh-store/dist",
-  "framework": "vite",
-  "installCommand": "echo skip install",
+  "buildCommand": "pnpm --filter @workspace/dien-lanh-store run build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "outputDirectory": "dist/public",
+  "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
   ]

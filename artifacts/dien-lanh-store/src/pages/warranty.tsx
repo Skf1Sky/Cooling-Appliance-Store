@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react";
-import { useCheckWarranty, getCheckWarrantyQueryKey } from "@workspace/api-client-react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,21 +10,35 @@ import { formatDate } from "@/lib/format";
 export default function Warranty() {
   const [phoneInput, setPhoneInput] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
+  const [warranties, setWarranties] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  const { data: warranties, isLoading, isError, isFetched } = useCheckWarranty(
-    { phone: searchPhone },
-    { 
-      query: { 
-        enabled: !!searchPhone,
-        queryKey: getCheckWarrantyQueryKey({ phone: searchPhone })
-      } 
-    }
-  );
-
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneInput.trim()) {
-      setSearchPhone(phoneInput.trim());
+    const phone = phoneInput.trim();
+    if (!phone) return;
+
+    setSearchPhone(phone);
+    setIsLoading(true);
+    setIsError(false);
+    
+    try {
+      const { data, error } = await supabase
+        .from('warranties')
+        .select('*')
+        .eq('phone', phone)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setWarranties(data || []);
+      setIsFetched(true);
+    } catch (err) {
+      console.error(err);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -86,19 +100,19 @@ export default function Warranty() {
                 <Card key={warranty.id} className="overflow-hidden">
                   <CardHeader className="bg-muted/30 pb-4">
                     <div className="flex justify-between items-start gap-4">
-                      <CardTitle className="text-lg leading-tight">{warranty.productName}</CardTitle>
+                      <CardTitle className="text-lg leading-tight">{warranty.product_name}</CardTitle>
                       {getStatusBadge(warranty.status)}
                     </div>
-                    {warranty.serialNumber && (
-                      <CardDescription className="font-mono mt-1">S/N: {warranty.serialNumber}</CardDescription>
+                    {warranty.serial_number && (
+                      <CardDescription className="font-mono mt-1">S/N: {warranty.serial_number}</CardDescription>
                     )}
                   </CardHeader>
                   <CardContent className="pt-4 space-y-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="text-muted-foreground">Ngày mua:</div>
-                      <div className="font-medium text-right">{formatDate(warranty.purchaseDate)}</div>
+                      <div className="font-medium text-right">{formatDate(warranty.purchase_date)}</div>
                       <div className="text-muted-foreground">Hết hạn bảo hành:</div>
-                      <div className="font-medium text-right">{formatDate(warranty.warrantyEndDate)}</div>
+                      <div className="font-medium text-right">{formatDate(warranty.warranty_end_date)}</div>
                     </div>
                     {warranty.note && (
                       <div className="mt-4 pt-4 border-t text-sm">
