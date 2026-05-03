@@ -1,5 +1,5 @@
 import "express-session";
-import express, { type Express } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { pinoHttp } from "pino-http";
 import session from "express-session";
@@ -16,7 +16,7 @@ declare module "express-session" {
 
 const PgStore = ConnectPgSimple(session);
 
-const app: Express = express();
+const app = express();
 
 app.use(
   pinoHttp({
