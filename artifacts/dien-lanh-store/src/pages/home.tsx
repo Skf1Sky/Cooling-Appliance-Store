@@ -1,11 +1,35 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Wrench, Truck, Wind, RefreshCw, Clock, Search } from "lucide-react";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "@/lib/mock-data";
+import { ArrowRight, Search, Wind, Wrench, RefreshCw, Loader2, Package } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { ProductCard } from "@/components/product-card";
 
 export default function Home() {
-  const featuredProducts = MOCK_PRODUCTS.filter(p => p.featured).slice(0, 4);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  const airConditioners = products.filter(p => p.category_id === 1).slice(0, 4);
+  const washingMachines = products.filter(p => p.category_id === 2).slice(0, 4);
+  const refrigerators = products.filter(p => p.category_id === 3).slice(0, 4);
 
   return (
     <div className="min-h-screen pb-20">
@@ -21,9 +45,9 @@ export default function Home() {
         </div>
 
         <div className="container relative z-10 px-4 text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <Badge variant="outline" className="mb-4 text-primary-foreground border-primary/30 bg-primary/10 px-4 py-1">
+          <div className="inline-flex items-center rounded-full border px-4 py-1 text-xs font-semibold mb-4 text-primary-foreground border-primary/30 bg-primary/10">
             Dịch vụ điện lạnh uy tín & chuyên nghiệp
-          </Badge>
+          </div>
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight mb-6 mx-auto tracking-tighter">
             Dịch Vụ <span className="text-primary">Tận Tâm</span><br />
             Bảo Hành <span className="text-primary">Chu Đáo</span>
@@ -46,57 +70,94 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 bg-slate-50">
-        <div className="container px-4">
-          <div className="text-center mb-12">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-4">Sản phẩm nổi bật</p>
-            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Lựa Chọn Tốt Nhất</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product as any} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link href="/products">
-              <Button variant="ghost" className="font-bold tracking-widest uppercase text-xs group">
-                Xem tất cả sản phẩm <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          </div>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-medium">Đang tải sản phẩm mới nhất...</p>
         </div>
-      </section>
-
-      {/* Categories Grid */}
-      <section className="py-20 container px-4">
-        <div className="text-center mb-16">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-4">Danh mục</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">Sản Phẩm Của Chúng Tôi</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {MOCK_CATEGORIES.map((cat) => (
-            <Link key={cat.id} href={`/products?categoryId=${cat.id}`}>
-              <div className="relative h-64 rounded-3xl overflow-hidden group cursor-pointer shadow-lg">
-                <img 
-                  src={cat.id === 1 ? "/images/category-ac.png" : (cat.id === 2 ? "/images/category-wm.png" : "/images/hero-banner.png")} 
-                  alt={cat.name} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 text-center px-6">
-                  <h3 className="text-2xl font-black text-white mb-2 tracking-tight">{cat.name}</h3>
-                  <div className="flex items-center gap-2 text-white/90 text-xs font-bold tracking-widest uppercase group-hover:text-primary transition-colors">
-                    Khám phá ngay <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+      ) : (
+        <>
+          {/* Section: Máy Lạnh */}
+          {airConditioners.length > 0 && (
+            <section className="py-20 bg-white">
+              <div className="container px-4">
+                <div className="flex items-center justify-between mb-12">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-2">Hàng mới về</p>
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">Máy Lạnh</h2>
                   </div>
+                  <Link href="/products?categoryId=1">
+                    <Button variant="ghost" className="font-bold tracking-widest uppercase text-xs">
+                      Xem tất cả <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {airConditioners.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+            </section>
+          )}
+
+          {/* Section: Máy Giặt */}
+          {washingMachines.length > 0 && (
+            <section className="py-20 bg-slate-50">
+              <div className="container px-4">
+                <div className="flex items-center justify-between mb-12">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-2">Lựa chọn tốt nhất</p>
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">Máy Giặt</h2>
+                  </div>
+                  <Link href="/products?categoryId=2">
+                    <Button variant="ghost" className="font-bold tracking-widest uppercase text-xs">
+                      Xem tất cả <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {washingMachines.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Section: Tủ Lạnh */}
+          {refrigerators.length > 0 && (
+            <section className="py-20 bg-white">
+              <div className="container px-4">
+                <div className="flex items-center justify-between mb-12">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-2">Bền bỉ & Tiết kiệm</p>
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">Tủ Lạnh</h2>
+                  </div>
+                  <Link href="/products?categoryId=3">
+                    <Button variant="ghost" className="font-bold tracking-widest uppercase text-xs">
+                      Xem tất cả <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {refrigerators.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+          
+          {products.length === 0 && (
+            <div className="text-center py-20 bg-slate-50 border-y">
+              <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2">Chưa có sản phẩm nào</h3>
+              <p className="text-slate-500">Vui lòng đăng nhập Admin để thêm sản phẩm đầu tiên.</p>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Services Preview */}
       <section className="py-20 md:py-32 bg-slate-900 text-white">
@@ -133,14 +194,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Badge({ children, className, variant }: any) {
-  return (
-    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>
-      {children}
     </div>
   );
 }

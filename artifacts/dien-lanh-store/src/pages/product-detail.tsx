@@ -1,108 +1,129 @@
-import { useMemo } from "react";
-import { useRoute } from "wouter";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { useRoute, Link } from "wouter";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
-import { ShieldCheck, Truck, Clock, ArrowLeft, ShoppingCart } from "lucide-react";
-import { Link } from "wouter";
+import { ArrowLeft, Phone, ShieldCheck, Truck, Loader2, Package } from "lucide-react";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/products/:id");
-  const productId = params?.id ? Number(params.id) : null;
+  const id = params?.id;
+  
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const product = useMemo(() => {
-    return MOCK_PRODUCTS.find(p => p.id === productId);
-  }, [productId]);
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        setProduct(data);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Đang tải chi tiết sản phẩm...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h2 className="text-2xl font-bold mb-4">Không tìm thấy sản phẩm</h2>
+      <div className="container px-4 py-20 text-center">
+        <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-4">Sản phẩm không tồn tại</h1>
         <Link href="/products">
-          <Button>Quay lại danh sách</Button>
+          <Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách</Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
-      <Link href="/products" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-6 transition-colors">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Quay lại danh sách
+    <div className="container px-4 py-12">
+      <Link href="/products">
+        <Button variant="ghost" className="mb-8 pl-0 hover:bg-transparent text-muted-foreground hover:text-primary">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách
+        </Button>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="aspect-square rounded-3xl overflow-hidden bg-slate-100 border">
-          <img 
-            src={product.image} 
-            alt={product.name} 
-            className="w-full h-full object-cover"
-          />
+        {/* Product Images */}
+        <div className="space-y-4">
+          <div className="aspect-square rounded-[2rem] overflow-hidden bg-white border shadow-sm">
+            <img 
+              src={product.image_url || "/images/category-ac.png"} 
+              className="w-full h-full object-cover" 
+              alt={product.name} 
+            />
+          </div>
         </div>
 
-        <div className="space-y-8">
-          <div>
-            <div className="flex gap-2 mb-4">
-              <Badge variant="secondary" className="uppercase tracking-widest text-[10px]">
-                {product.condition === "new" ? "Hàng Mới" : "Hàng Cũ"}
-              </Badge>
-              {product.featured && (
-                <Badge className="bg-primary text-white uppercase tracking-widest text-[10px]">Nổi Bật</Badge>
-              )}
+        {/* Product Info */}
+        <div className="flex flex-col">
+          <div className="mb-6">
+            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary mb-4 uppercase tracking-widest">
+              {product.condition === 'new' ? 'Hàng Mới' : 'Hàng Cũ'}
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2">{product.name}</h1>
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <h1 className="text-4xl font-black tracking-tight mb-4 leading-tight">{product.name}</h1>
+            <div className="text-3xl font-black text-primary mb-6">
+              {formatCurrency(product.price)}
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <div className="text-3xl font-black text-primary">{formatCurrency(product.price)}</div>
-            {product.originalPrice && (
-              <div className="text-lg text-muted-foreground line-through opacity-70">
-                {formatCurrency(product.originalPrice)}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-6 border-y">
-            {Object.entries(product.specs).map(([key, value]) => (
-              <div key={key} className="flex justify-between text-sm py-1 border-b border-dashed md:border-none">
-                <span className="text-muted-foreground">{key}:</span>
-                <span className="font-bold">{value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-4 pt-4">
-            <Button size="lg" className="w-full h-14 text-base font-bold uppercase tracking-widest">
-              <ShoppingCart className="w-5 h-5 mr-2" /> Thêm vào giỏ hàng
-            </Button>
-            <a href="tel:0898234048" className="block">
-              <Button size="lg" variant="outline" className="w-full h-14 text-base font-bold uppercase tracking-widest">
-                Gọi tư vấn: 0898 234 048
-              </Button>
-            </a>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 pt-6">
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <div className="space-y-6 mb-8">
+            <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bảo hành uy tín</span>
+              <div>
+                <p className="text-sm font-bold">Bảo hành dài hạn</p>
+                <p className="text-xs text-muted-foreground">Tất cả sản phẩm đều được bảo hành từ 6-12 tháng.</p>
+              </div>
             </div>
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            
+            <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0">
                 <Truck className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Giao hàng nhanh</span>
-            </div>
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Clock className="w-5 h-5" />
+              <div>
+                <p className="text-sm font-bold">Lắp đặt tại nhà</p>
+                <p className="text-xs text-muted-foreground">Hỗ trợ vận chuyển và lắp đặt chuyên nghiệp trong nội thành.</p>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hỗ trợ 24/7</span>
             </div>
+          </div>
+
+          <div className="bg-white border rounded-3xl p-6 mb-8">
+            <h3 className="font-bold mb-3">Mô tả sản phẩm</h3>
+            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+              {product.description || "Đang cập nhật thông tin mô tả cho sản phẩm này."}
+            </p>
+          </div>
+
+          <div className="mt-auto space-y-4">
+            <a href="tel:0898234048" className="block">
+              <Button size="lg" className="w-full h-16 text-lg font-bold uppercase tracking-widest">
+                <Phone className="w-5 h-5 mr-3" /> Gọi ngay: 0898 234 048
+              </Button>
+            </a>
+            <p className="text-center text-xs text-muted-foreground">
+              Tư vấn miễn phí — Hỗ trợ 24/7
+            </p>
           </div>
         </div>
       </div>

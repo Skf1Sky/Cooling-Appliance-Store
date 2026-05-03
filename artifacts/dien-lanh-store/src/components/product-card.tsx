@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
             </Badge>
           )}
           <img
-            src={product.image || "/images/category-ac.png"}
+            src={product.image_url || "/images/category-ac.png"}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />

@@ -319,8 +319,11 @@ function ProductsTab() {
     name: "",
     price: "",
     description: "",
-    condition: "new"
+    condition: "new",
+    category_id: "1",
+    imageUrl: ""
   });
+  const [uploading, setUploading] = useState(false);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -342,6 +345,36 @@ function ProductsTab() {
     fetchProducts();
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      if (!e.target.files || e.target.files.length === 0) return;
+      
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, imageUrl: publicUrl });
+      toast({ title: "Thành công", description: "Đã tải ảnh lên" });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({ title: "Lỗi", description: "Không thể tải ảnh lên. Hãy chắc chắn bạn đã tạo bucket 'product-images' trên Supabase.", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -352,6 +385,8 @@ function ProductsTab() {
           price: parseInt(formData.price),
           description: formData.description,
           condition: formData.condition,
+          category_id: parseInt(formData.category_id),
+          image_url: formData.imageUrl,
           created_at: new Date()
         }]);
 
@@ -363,7 +398,7 @@ function ProductsTab() {
       });
       
       setIsAdding(false);
-      setFormData({ name: "", price: "", description: "", condition: "new" });
+      setFormData({ name: "", price: "", description: "", condition: "new", category_id: "1", imageUrl: "" });
       fetchProducts();
     } catch (error) {
       console.error("Error:", error);
@@ -398,7 +433,7 @@ function ProductsTab() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Tên sản phẩm</Label>
                   <Input 
@@ -418,6 +453,39 @@ function ProductsTab() {
                     placeholder="12000000" 
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Danh mục</Label>
+                  <Select 
+                    value={formData.category_id} 
+                    onValueChange={(v) => setFormData({...formData, category_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Máy Lạnh</SelectItem>
+                      <SelectItem value="2">Máy Giặt</SelectItem>
+                      <SelectItem value="3">Tủ Lạnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Hình ảnh sản phẩm</Label>
+                <div className="flex items-center gap-4">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    disabled={uploading}
+                  />
+                  {uploading && <Loader2 className="w-5 h-5 animate-spin" />}
+                </div>
+                {formData.imageUrl && (
+                  <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border">
+                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Mô tả</Label>

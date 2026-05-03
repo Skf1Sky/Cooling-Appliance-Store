@@ -1,92 +1,90 @@
-import { useState, useMemo } from "react";
-import { useLocation } from "wouter";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { useSearch } from "wouter/use-browser-location";
+import { supabase } from "@/lib/supabase";
 import { ProductCard } from "@/components/product-card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search, Loader2, Package } from "lucide-react";
 
 export default function Products() {
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split("?")[1] || "");
-  const initialCategoryId = searchParams.get("categoryId");
-
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const categoryId = params.get("categoryId");
+  
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(initialCategoryId);
-  const [sortBy, setSortBy] = useState<"price-asc" | "price-desc" | "newest">("newest");
 
-  const filteredProducts = useMemo(() => {
-    let result = [...MOCK_PRODUCTS];
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        let query = supabase.from("products").select("*").order("created_at", { ascending: false });
+        
+        if (categoryId) {
+          query = query.eq("category_id", parseInt(categoryId));
+        }
 
-    if (selectedCategoryId) {
-      result = result.filter(p => p.categoryId === Number(selectedCategoryId));
+        const { data, error } = await query;
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchProducts();
+  }, [categoryId]);
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(query) || 
-        p.description.toLowerCase().includes(query)
-      );
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getCategoryTitle = () => {
+    switch (categoryId) {
+      case "1": return "Máy Lạnh";
+      case "2": return "Máy Giặt";
+      case "3": return "Tủ Lạnh";
+      default: return "Tất Cả Sản Phẩm";
     }
-
-    if (sortBy === "price-asc") {
-      result.sort((a, b) => Number(a.price) - Number(b.price));
-    } else if (sortBy === "price-desc") {
-      result.sort((a, b) => Number(b.price) - Number(a.price));
-    }
-
-    return result;
-  }, [searchQuery, selectedCategoryId, sortBy]);
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="container px-4 py-12 min-h-[60vh]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sản Phẩm</h1>
-          <p className="text-muted-foreground mt-1">Tìm kiếm thiết bị phù hợp với gia đình bạn</p>
+          <h1 className="text-4xl font-black tracking-tight mb-2">{getCategoryTitle()}</h1>
+          <p className="text-muted-foreground">Khám phá danh sách thiết bị điện lạnh chất lượng cao.</p>
         </div>
+        
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Tìm kiếm sản phẩm..." 
-            className="pl-10"
+            className="pl-10 h-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8">
-        <Button 
-          variant={selectedCategoryId === null ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCategoryId(null)}
-        >
-          Tất cả
-        </Button>
-        {MOCK_CATEGORIES.map((cat) => (
-          <Button 
-            key={cat.id}
-            variant={selectedCategoryId === String(cat.id) ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategoryId(String(cat.id))}
-          >
-            {cat.name}
-          </Button>
-        ))}
-      </div>
-
-      {filteredProducts.length > 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Đang tải sản phẩm...</p>
+        </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product as any} />
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
-          <p className="text-muted-foreground text-lg">Không tìm thấy sản phẩm nào khớp với tìm kiếm.</p>
+        <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed">
+          <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Không tìm thấy sản phẩm</h2>
+          <p className="text-slate-500">Thử tìm kiếm với từ khóa khác hoặc quay lại sau.</p>
         </div>
       )}
     </div>
