@@ -321,7 +321,8 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
   const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: ""
+    name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", 
+    imageUrl: "", imageUrl2: "", imageUrl3: "", imageUrl4: ""
   });
 
   const fetchProducts = async () => {
@@ -334,7 +335,7 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     try {
       setUploading(true);
       if (!e.target.files || e.target.files.length === 0) return;
@@ -343,7 +344,7 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
       const { error: uploadError } = await supabase.storage.from('product-images').upload(`products/${fileName}`, file);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`products/${fileName}`);
-      setFormData({ ...formData, imageUrl: publicUrl });
+      setFormData({ ...formData, [fieldName]: publicUrl });
       toast.success("Tải ảnh thành công");
     } catch (error) {
       toast.error("Lỗi khi tải ảnh");
@@ -352,7 +353,7 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
 
   const openCreateModal = () => {
     setEditId(null);
-    setFormData({ name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: "" });
+    setFormData({ name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: "", imageUrl2: "", imageUrl3: "", imageUrl4: "" });
     setIsModalOpen(true);
   };
 
@@ -361,7 +362,8 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
     setFormData({
       name: p.name, price: p.price.toString(), description: p.description || "",
       condition: p.condition || "new", category_id: p.category_id.toString(),
-      brand: p.brand || "", imageUrl: p.image_url || ""
+      brand: p.brand || "", imageUrl: p.image_url || "", 
+      imageUrl2: p.image_url_2 || "", imageUrl3: p.image_url_3 || "", imageUrl4: p.image_url_4 || ""
     });
     setIsModalOpen(true);
   };
@@ -376,6 +378,9 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
       condition: formData.condition,
       category_id: parseInt(formData.category_id),
       image_url: formData.imageUrl,
+      image_url_2: formData.imageUrl2,
+      image_url_3: formData.imageUrl3,
+      image_url_4: formData.imageUrl4,
       slug: editId ? undefined : `${slugify(formData.name)}-${Math.random().toString(36).substring(2, 7)}`
     };
 
@@ -496,24 +501,38 @@ function ProductsTab({ searchQuery }: { searchQuery: string }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1 sm:col-span-2 space-y-1.5">
-                <Label className="text-xs font-bold">Hình ảnh</Label>
-                <div className="flex flex-col gap-3 p-3 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
-                  <div className="flex items-center gap-3">
-                    <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="bg-white flex-1 h-9 text-xs" />
-                    {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  </div>
-                  <div className="relative">
-                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} placeholder="Hoặc dán link ảnh..." className="pl-9 bg-white h-9 text-xs" />
-                  </div>
+              <div className="col-span-1 sm:col-span-2 space-y-3">
+                <Label className="text-xs font-bold">Hình ảnh sản phẩm (Tối đa 4 ảnh)</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { id: 'imageUrl', label: 'Ảnh chính' },
+                    { id: 'imageUrl2', label: 'Ảnh 2' },
+                    { id: 'imageUrl3', label: 'Ảnh 3' },
+                    { id: 'imageUrl4', label: 'Ảnh 4' }
+                  ].map((field) => (
+                    <div key={field.id} className="space-y-2 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground">{field.label}</p>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, field.id)} disabled={uploading} className="bg-white h-8 text-[10px] flex-1" />
+                          {uploading && <Loader2 className="w-3 h-3 animate-spin" />}
+                        </div>
+                        <Input 
+                          value={(formData as any)[field.id]} 
+                          onChange={(e) => setFormData({...formData, [field.id]: e.target.value})} 
+                          placeholder="Hoặc dán link..." 
+                          className="bg-white h-8 text-[10px]"
+                        />
+                        {(formData as any)[field.id] && (
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden border mt-1">
+                            <img src={(formData as any)[field.id]} className="w-full h-full object-cover" alt="" />
+                            <button type="button" onClick={() => setFormData({...formData, [field.id]: ""})} className="absolute top-0 right-0 bg-destructive text-white rounded-full p-0.5"><X className="w-2 h-2" /></button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {formData.imageUrl && (
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm mt-1">
-                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
-                    <button type="button" onClick={() => setFormData({...formData, imageUrl: ""})} className="absolute top-0.5 right-0.5 bg-destructive text-white rounded-full p-0.5"><X className="w-2.5 h-2.5" /></button>
-                  </div>
-                )}
               </div>
               <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-bold">Mô tả</Label>
