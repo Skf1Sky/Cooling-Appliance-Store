@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"warranty">("warranty");
+  const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +59,13 @@ export default function Admin() {
           >
             <ShieldCheck className="w-4 h-4 mr-2" /> Bảo Hành
           </Button>
+          <Button 
+            variant={activeTab === "products" ? "secondary" : "ghost"} 
+            className="w-full justify-start"
+            onClick={() => setActiveTab("products")}
+          >
+            <Package className="w-4 h-4 mr-2" /> Sản Phẩm
+          </Button>
         </nav>
         <div className="p-4 border-t">
           <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleLogout}>
@@ -71,6 +78,7 @@ export default function Admin() {
       <div className="flex-1 overflow-auto bg-background">
         <div className="p-8">
           {activeTab === "warranty" && <WarrantyTab />}
+          {activeTab === "products" && <ProductsTab />}
         </div>
       </div>
     </div>
@@ -299,6 +307,179 @@ function WarrantyTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function ProductsTab() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    description: "",
+    condition: "new"
+  });
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from("products")
+        .insert([{
+          name: formData.name,
+          price: parseInt(formData.price),
+          description: formData.description,
+          condition: formData.condition,
+          created_at: new Date()
+        }]);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Thành công",
+        description: "Đã thêm sản phẩm mới vào hệ thống",
+      });
+      
+      setIsAdding(false);
+      setFormData({ name: "", price: "", description: "", condition: "new" });
+      fetchProducts();
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu sản phẩm. Vui lòng kiểm tra lại bảng products trên Supabase.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Quản Lý Sản Phẩm</h2>
+          <p className="text-muted-foreground">Nhập và quản lý danh sách sản phẩm trong kho</p>
+        </div>
+        <Button onClick={() => setIsAdding(!isAdding)}>
+          {isAdding ? "Hủy" : (
+            <>
+              <Plus className="w-4 h-4 mr-2" /> Thêm Sản Phẩm
+            </>
+          )}
+        </Button>
+      </div>
+
+      {isAdding && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardHeader>
+            <CardTitle>Nhập thông tin sản phẩm mới</CardTitle>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tên sản phẩm</Label>
+                  <Input 
+                    required 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="VD: Máy lạnh Daikin 1.5HP" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Giá bán (VNĐ)</Label>
+                  <Input 
+                    required 
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({...formData, price: e.target.value})}
+                    placeholder="12000000" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Mô tả</Label>
+                <textarea 
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Nhập thông tin chi tiết về sản phẩm..."
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full">Lưu Sản Phẩm</Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tên Sản Phẩm</TableHead>
+                <TableHead>Giá</TableHead>
+                <TableHead>Tình Trạng</TableHead>
+                <TableHead>Ngày Nhập</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                  </TableCell>
+                </TableRow>
+              ) : products.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Chưa có sản phẩm nào. Hãy nhấn "Thêm Sản Phẩm" để bắt đầu.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                products.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price)}</TableCell>
+                    <TableCell>
+                      <Badge variant={p.condition === 'new' ? 'default' : 'secondary'}>
+                        {p.condition === 'new' ? 'Mới' : 'Cũ'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString('vi-VN')}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
