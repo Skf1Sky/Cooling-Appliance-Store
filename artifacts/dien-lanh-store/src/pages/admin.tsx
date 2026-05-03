@@ -21,7 +21,7 @@ export default function Admin() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"warranty" | "products">("warranty");
   const [searchQuery, setSearchQuery] = useState("");
-  const [quickSellData, setQuickSellData] = useState<string | null>(null);
+  const [quickSellData, setQuickSellData] = useState<{ id: number, name: string } | null>(null);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
@@ -38,8 +38,8 @@ export default function Admin() {
     toast.success("Đã đăng xuất");
   };
 
-  const handleQuickSell = (productName: string) => {
-    setQuickSellData(productName);
+  const handleQuickSell = (id: number, productName: string) => {
+    setQuickSellData({ id, name: productName });
     setActiveTab("warranty");
   };
 
@@ -104,12 +104,13 @@ export default function Admin() {
   );
 }
 
-function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { searchQuery: string, initialProductName: string | null, onClearQuickSell: () => void }) {
+function WarrantyTab({ searchQuery, initialProduct, onClearQuickSell }: { searchQuery: string, initialProduct: { id: number, name: string } | null, onClearQuickSell: () => void }) {
   const [warranties, setWarranties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
+  const [sellingProductId, setSellingProductId] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<any>({
     customer_name: "", phone: "", product_name: "", serial_number: "", purchase_date: "", warranty_end_date: "", status: "active", note: ""
@@ -128,12 +129,13 @@ function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { se
   };
 
   useEffect(() => {
-    if (initialProductName) {
+    if (initialProduct) {
       setEditId(null);
+      setSellingProductId(initialProduct.id);
       setFormData({
         customer_name: "", 
         phone: "", 
-        product_name: initialProductName, 
+        product_name: initialProduct.name, 
         serial_number: "", 
         purchase_date: new Date().toISOString().split('T')[0], 
         warranty_end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
@@ -141,14 +143,15 @@ function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { se
         note: ""
       });
       setIsModalOpen(true);
-      onClearQuickSell(); // Clear it so it doesn't reopen on every tab switch
+      onClearQuickSell();
     }
-  }, [initialProductName, onClearQuickSell]);
+  }, [initialProduct, onClearQuickSell]);
 
   useEffect(() => { fetchWarranties(); }, []);
 
   const openCreateModal = () => {
     setEditId(null);
+    setSellingProductId(null);
     setFormData({
       customer_name: "", phone: "", product_name: "", serial_number: "", 
       purchase_date: new Date().toISOString().split('T')[0], 
@@ -160,6 +163,7 @@ function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { se
 
   const openEditModal = (w: any) => {
     setEditId(w.id);
+    setSellingProductId(null);
     setFormData({
       customer_name: w.customer_name,
       phone: w.phone,
@@ -187,9 +191,36 @@ function WarrantyTab({ searchQuery, initialProductName, onClearQuickSell }: { se
 
     if (error) toast.error("Lỗi khi lưu dữ liệu");
     else {
-      toast.success(editId ? "Đã cập nhật" : "Đã thêm mới");
+      toast.success(editId ? "Đã cập nhật" : "Đã kích hoạt bảo hành thành công");
       setIsModalOpen(false);
       fetchWarranties();
+
+      // IF THIS WAS A QUICK SELL, DELETE THE PRODUCT
+      if (!editId && sellingProductId) {
+        try {
+          // Get product info first to delete images
+          const { data: p } = await supabase.from("products").select("*").eq("id", sellingProductId).single();
+          if (p) {
+            const imageFields = ['image_url', 'image_url_2', 'image_url_3', 'image_url_4'];
+            const imagesToDelete: string[] = [];
+            imageFields.forEach(f => {
+              if (p[f]?.includes('supabase.co/storage')) {
+                const fileName = p[f].split('/').pop();
+                if (fileName) imagesToDelete.push(`products/${fileName}`);
+              }
+            });
+            if (imagesToDelete.length > 0) {
+              await supabase.storage.from('product-images').remove(imagesToDelete);
+            }
+          }
+          // Delete from DB
+          await supabase.from("products").delete().eq("id", sellingProductId);
+          toast.info("Đã tự động xóa máy khỏi kho hàng");
+          setSellingProductId(null);
+        } catch (err) {
+          console.error("Auto-delete error:", err);
+        }
+      }
     }
   };
 
@@ -489,7 +520,7 @@ function ProductsTab({ searchQuery, onQuickSell }: { searchQuery: string, onQuic
             <div className="p-3 pt-0 flex flex-col gap-2">
               <Button 
                 className="w-full h-9 rounded-xl font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 shadow-sm"
-                onClick={() => onQuickSell(`${p.brand} ${p.name}`)}
+                onClick={() => onQuickSell(p.id, `${p.brand} ${p.name}`)}
               >
                 <ShoppingCart className="w-3.5 h-3.5 mr-2" /> BÁN MÁY
               </Button>
