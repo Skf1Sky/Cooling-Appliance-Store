@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldCheck, LogOut, Loader2, Plus, Edit2, Trash2, Package, Image as ImageIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function Admin() {
@@ -321,9 +322,13 @@ function ProductsTab() {
     description: "",
     condition: "new",
     category_id: "1",
+    brand: "",
     imageUrl: ""
   });
   const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -366,47 +371,97 @@ function ProductsTab() {
         .getPublicUrl(filePath);
 
       setFormData({ ...formData, imageUrl: publicUrl });
-      toast({ title: "Thành công", description: "Đã tải ảnh lên" });
+      toast.success("Đã tải ảnh lên");
     } catch (error) {
       console.error('Error:', error);
-      toast({ title: "Lỗi", description: "Không thể tải ảnh lên. Hãy chắc chắn bạn đã tạo bucket 'product-images' trên Supabase.", variant: "destructive" });
+      toast.error("Không thể tải ảnh lên. Hãy chắc chắn bạn đã tạo bucket 'product-images' trên Supabase.");
     } finally {
       setUploading(false);
     }
   };
 
+  const openCreateModal = () => {
+    setEditId(null);
+    setFormData({
+      name: "", price: "", description: "", condition: "new", category_id: "1", brand: "", imageUrl: ""
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (p: any) => {
+    setEditId(p.id);
+    setFormData({
+      name: p.name,
+      price: p.price.toString(),
+      description: p.description || "",
+      condition: p.condition || "new",
+      category_id: p.category_id.toString(),
+      brand: p.brand || "",
+      imageUrl: p.image_url || ""
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
-        .from("products")
-        .insert([{
-          name: formData.name,
-          price: parseInt(formData.price),
-          description: formData.description,
-          condition: formData.condition,
-          category_id: parseInt(formData.category_id),
-          image_url: formData.imageUrl,
-          created_at: new Date()
-        }]);
+      const payload = {
+        name: formData.name,
+        slug: slugify(formData.name) + "-" + Math.random().toString(36).substring(2, 7),
+        brand: formData.brand || "Khác",
+        price: parseInt(formData.price),
+        description: formData.description,
+        condition: formData.condition,
+        category_id: parseInt(formData.category_id),
+        image_url: formData.imageUrl,
+      };
 
-      if (error) throw error;
+      if (editId) {
+        // When updating, we don't necessarily want to change the slug unless the name changes
+        // For simplicity, we just update everything except slug if it's already set
+        const { error } = await supabase
+          .from("products")
+          .update({
+            name: payload.name,
+            brand: payload.brand,
+            price: payload.price,
+            description: payload.description,
+            condition: payload.condition,
+            category_id: payload.category_id,
+            image_url: payload.image_url,
+          })
+          .eq("id", editId);
+        
+        if (error) throw error;
+        toast.success("Đã cập nhật sản phẩm");
+      } else {
+        const { error } = await supabase
+          .from("products")
+          .insert([payload]);
+        
+        if (error) throw error;
+        toast.success("Đã thêm sản phẩm mới");
+      }
       
-      toast({
-        title: "Thành công",
-        description: "Đã thêm sản phẩm mới vào hệ thống",
-      });
-      
-      setIsAdding(false);
-      setFormData({ name: "", price: "", description: "", condition: "new", category_id: "1", imageUrl: "" });
+      setIsModalOpen(false);
       fetchProducts();
     } catch (error) {
       console.error("Error:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể lưu sản phẩm. Vui lòng kiểm tra lại bảng products trên Supabase.",
-        variant: "destructive"
-      });
+      toast.error("Không thể lưu sản phẩm. Vui lòng kiểm tra lại bảng products trên Supabase.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", deleteId);
+      if (error) throw error;
+      toast.success("Đã xóa sản phẩm");
+      setDeleteId(null);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Không thể xóa sản phẩm");
     }
   };
 
@@ -417,129 +472,64 @@ function ProductsTab() {
           <h2 className="text-2xl font-bold tracking-tight">Quản Lý Sản Phẩm</h2>
           <p className="text-muted-foreground">Nhập và quản lý danh sách sản phẩm trong kho</p>
         </div>
-        <Button onClick={() => setIsAdding(!isAdding)}>
-          {isAdding ? "Hủy" : (
-            <>
-              <Plus className="w-4 h-4 mr-2" /> Thêm Sản Phẩm
-            </>
-          )}
+        <Button onClick={openCreateModal}>
+          <Plus className="w-4 h-4 mr-2" /> Thêm Sản Phẩm
         </Button>
       </div>
-
-      {isAdding && (
-        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardHeader>
-            <CardTitle>Nhập thông tin sản phẩm mới</CardTitle>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Tên sản phẩm</Label>
-                  <Input 
-                    required 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="VD: Máy lạnh Daikin 1.5HP" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Giá bán (VNĐ)</Label>
-                  <Input 
-                    required 
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: e.target.value})}
-                    placeholder="12000000" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Danh mục</Label>
-                  <Select 
-                    value={formData.category_id} 
-                    onValueChange={(v) => setFormData({...formData, category_id: v})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Máy Lạnh</SelectItem>
-                      <SelectItem value="2">Máy Giặt</SelectItem>
-                      <SelectItem value="3">Tủ Lạnh</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Hình ảnh sản phẩm</Label>
-                <div className="flex items-center gap-4">
-                  <Input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageUpload} 
-                    disabled={uploading}
-                  />
-                  {uploading && <Loader2 className="w-5 h-5 animate-spin" />}
-                </div>
-                {formData.imageUrl && (
-                  <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border">
-                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="Preview" />
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Mô tả</Label>
-                <textarea 
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Nhập thông tin chi tiết về sản phẩm..."
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full">Lưu Sản Phẩm</Button>
-            </CardFooter>
-          </form>
-        </Card>
-      )}
 
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-16">Ảnh</TableHead>
                 <TableHead>Tên Sản Phẩm</TableHead>
+                <TableHead>Thương hiệu</TableHead>
                 <TableHead>Giá</TableHead>
                 <TableHead>Tình Trạng</TableHead>
-                <TableHead>Ngày Nhập</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Chưa có sản phẩm nào. Hãy nhấn "Thêm Sản Phẩm" để bắt đầu.
                   </TableCell>
                 </TableRow>
               ) : (
                 products.map((p) => (
                   <TableRow key={p.id}>
+                    <TableCell>
+                      {p.image_url ? (
+                        <img src={p.image_url} alt="" className="w-10 h-10 object-cover rounded border" />
+                      ) : (
+                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                          <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell>{p.brand || "-"}</TableCell>
                     <TableCell>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price)}</TableCell>
                     <TableCell>
                       <Badge variant={p.condition === 'new' ? 'default' : 'secondary'}>
                         {p.condition === 'new' ? 'Mới' : 'Cũ'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(p.created_at).toLocaleDateString('vi-VN')}
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => openEditModal(p)}>
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => setDeleteId(p.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -548,6 +538,84 @@ function ProductsTab() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editId ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 col-span-2">
+                <Label>Tên sản phẩm</Label>
+                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="VD: Máy lạnh Daikin 1.5HP" />
+              </div>
+              <div className="space-y-2">
+                <Label>Thương hiệu</Label>
+                <Input required value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} placeholder="VD: Daikin, Panasonic..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Giá bán (VNĐ)</Label>
+                <Input required type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="12000000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Danh mục</Label>
+                <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Máy Lạnh</SelectItem>
+                    <SelectItem value="2">Máy Giặt</SelectItem>
+                    <SelectItem value="3">Tủ Lạnh</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Tình trạng</Label>
+                <Select value={formData.condition} onValueChange={(v) => setFormData({...formData, condition: v})}>
+                  <SelectTrigger><SelectValue placeholder="Chọn tình trạng" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">Mới</SelectItem>
+                    <SelectItem value="used">Cũ / Like New</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Hình ảnh sản phẩm</Label>
+                <div className="flex items-center gap-4">
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
+                  {uploading && <Loader2 className="w-5 h-5 animate-spin" />}
+                </div>
+                {formData.imageUrl && (
+                  <div className="mt-2 relative w-24 h-24 rounded-lg overflow-hidden border">
+                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                  </div>
+                )}
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Mô tả</Label>
+                <Textarea className="min-h-[100px]" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Nhập thông tin chi tiết về sản phẩm..." />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+              <Button type="submit">Lưu Sản Phẩm</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống? Hành động này không thể hoàn tác.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Xóa</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
