@@ -8,10 +8,7 @@ import router from "./routes/index.js";
 import { logger } from "./lib/logger.js";
 
 declare module "express-session" {
-  interface SessionData {
-    userId: number;
-    role: string;
-  }
+  
 }
 
 const PgStore = ConnectPgSimple(session);

@@ -26,10 +26,10 @@ const PRODUCT_FIELDS = {
   reviewCount: productsTable.reviewCount,
 } as const;
 
-function formatProduct(p: Record<string, unknown>) {
+function formatProduct(p, unknown>) {
   return {
     ...p,
-    price: Number(p.price),
+    price(p.price),
     originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
     rating: p.rating ? Number(p.rating) : undefined,
   };
@@ -43,7 +43,7 @@ router.get("/products", async (req, res) => {
   const { categoryId, search, minPrice, maxPrice, brand } = parsed.data;
   const condition = req.query["condition"] as string | undefined;
 
-  const conditions: SQL[] = [];
+  const conditions= [];
   if (categoryId) conditions.push(eq(productsTable.categoryId, categoryId));
   if (brand) {
     const brands = brand.split(",").map((b: string) => b.trim());

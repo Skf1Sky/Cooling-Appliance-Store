@@ -1,4 +1,4 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
+import { Router } from "express";
 import { db, ordersTable, productsTable, warrantiesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import {
@@ -16,7 +16,7 @@ import {
 
 const router = Router();
 
-function requireAdmin(req: Request, res: Response, next: NextFunction) {
+function requireAdmin(req, res, next) {
   if (!req.session.userId || req.session.role !== "admin") {
     return res.status(401).json({ error: "Chưa đăng nhập hoặc không có quyền truy cập" });
   }
@@ -55,7 +55,7 @@ router.post("/admin/products", async (req, res) => {
   const { price, originalPrice, ...rest } = parsed.data;
   const [product] = await db
     .insert(productsTable)
-    .values({ ...rest, price: String(price), originalPrice: originalPrice ? String(originalPrice) : null } as any)
+    .values({ ...rest, price: String(price), originalPrice: originalPrice ? String(originalPrice) : null })
     .returning();
   return res.status(201).json({ ...product, price: Number(product.price), originalPrice: product.originalPrice ? Number(product.originalPrice) : undefined });
 });
@@ -65,7 +65,7 @@ router.put("/admin/products/:id", async (req, res) => {
   const bodyParsed = AdminUpdateProductBody.safeParse(req.body);
   if (!paramsParsed.success || !bodyParsed.success) return res.status(400).json({ error: "Dữ liệu không hợp lệ" });
   const { price, originalPrice, ...rest } = bodyParsed.data;
-  const updateData: any = { ...rest };
+  const updateData = { ...rest };
   if (price !== undefined) updateData.price = String(price);
   if (originalPrice !== undefined) updateData.originalPrice = String(originalPrice);
   const [product] = await db.update(productsTable).set(updateData).where(eq(productsTable.id, paramsParsed.data.id)).returning();

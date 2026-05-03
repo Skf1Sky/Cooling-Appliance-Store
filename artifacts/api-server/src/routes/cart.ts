@@ -26,9 +26,9 @@ async function getCartData(sessionId: string) {
     productId: item.productId,
     productName: item.productName ?? "",
     productImageUrl: item.productImageUrl ?? undefined,
-    price: Number(item.price ?? 0),
+    price(item.price ?? 0),
     quantity: item.quantity,
-    subtotal: Number(item.price ?? 0) * item.quantity,
+    subtotal(item.price ?? 0) * item.quantity,
   }));
 
   const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);

@@ -39,7 +39,7 @@ router.post("/orders", async (req, res) => {
       customerEmail,
       shippingAddress,
       note,
-      total: String(total),
+      total(total),
     })
     .returning();
 
@@ -47,7 +47,7 @@ router.post("/orders", async (req, res) => {
 
   return res.status(201).json({
     ...order,
-    total: Number(order.total),
+    total(order.total),
     createdAt: order.createdAt.toISOString(),
   });
 });
