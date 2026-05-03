@@ -109,8 +109,8 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
     const { data: wData } = await supabase.from('warranties').select('*').order('created_at', { ascending: false });
     setWarranties(wData || []);
     
-    // Fetch Products in Stock
-    const { data: pData } = await supabase.from('products').select('id, name, brand').order('brand', { ascending: true });
+    // Fetch Products in Stock (Same order as ProductsTab for consistent STT)
+    const { data: pData } = await supabase.from('products').select('id, name, brand').order('created_at', { ascending: false });
     setProductsInStock(pData || []);
     
     setIsLoading(false);
@@ -120,7 +120,7 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
 
   const openCreateModal = () => {
     setEditId(null);
-    setSelectedProductId("manual");
+    setSelectedProductId("");
     setFormData({
       customer_name: "", phone: "", product_name: "", serial_number: "", 
       purchase_date: new Date().toISOString().split('T')[0], 
@@ -132,7 +132,7 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
 
   const openEditModal = (w: any) => {
     setEditId(w.id);
-    setSelectedProductId("manual");
+    setSelectedProductId("");
     setFormData({
       customer_name: w.customer_name,
       phone: w.phone,
@@ -148,11 +148,14 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
 
   const handleProductSelect = (val: string) => {
     setSelectedProductId(val);
-    if (val !== "manual") {
-      const p = productsInStock.find(item => item.id.toString() === val);
-      if (p) {
-        setFormData({ ...formData, product_name: `${p.brand} ${p.name}`.toUpperCase() });
-      }
+    const index = productsInStock.findIndex(item => item.id.toString() === val);
+    if (index !== -1) {
+      const p = productsInStock[index];
+      setFormData({ 
+        ...formData, 
+        product_name: `${p.brand} ${p.name}`.toUpperCase(),
+        serial_number: (index + 1).toString() // Auto-fill STT as Serial Number
+      });
     }
   };
 
@@ -295,12 +298,13 @@ function WarrantyTab({ searchQuery }: { searchQuery: string }) {
               <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-bold uppercase">Chọn máy từ kho (Hoặc nhập tay)</Label>
                 <Select value={selectedProductId} onValueChange={handleProductSelect}>
-                  <SelectTrigger className="h-10 border-primary/20 bg-primary/5"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 border-primary/20 bg-primary/5">
+                    <SelectValue placeholder="--- Chọn máy từ kho ---" />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manual">-- Tự nhập tên máy --</SelectItem>
-                    {productsInStock.map(p => (
+                    {productsInStock.map((p, idx) => (
                       <SelectItem key={p.id} value={p.id.toString()}>
-                        [{p.brand.toUpperCase()}] {p.name.toUpperCase()}
+                        STT {idx + 1}: [{p.brand.toUpperCase()}] {p.name.toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
